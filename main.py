@@ -1,18 +1,25 @@
+import sys
+import os
 import asyncio
 from pyrogram import idle
 from app import app, start_web_server
-from MyselfNeon.plugins.monitor import monitor_task
+
+# Explicitly add current directory to python path
+sys.path.append(os.getcwd())
+
+# CHANGED: Imported directly from MyselfNeon.monitor (removed .plugins)
+from MyselfNeon.monitor import monitor_task
 
 async def start_bot():
     print("Starting Bot...")
     
-    # 1. Start the Web Server (Fixes Port Scanning Errors)
+    # 1. Start Web Server (Fixes Port Scanning)
     await start_web_server()
     
-    # 2. Start the Telegram Client
+    # 2. Start Telegram Client
     await app.start()
     
-    # 3. Start the Background Monitoring Task
+    # 3. Start Background Task
     asyncio.create_task(monitor_task(app))
     
     print("Bot is up and running!")
@@ -22,9 +29,7 @@ async def start_bot():
     print("Bot Stopped.")
 
 if __name__ == "__main__":
-    # We use asyncio.run to manage the event loop cleanly
     try:
-        # Get the event loop
         loop = asyncio.get_event_loop()
         loop.run_until_complete(start_bot())
     except KeyboardInterrupt:
