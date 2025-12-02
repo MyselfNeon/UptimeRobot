@@ -107,6 +107,6 @@ async def stats_command(client, message):
         for url in URLS:
             state = url_states.get(url, "Unknown (Not Checked Yet)")
             icon = "🟢" if state == "online" else "🔴"
-            text += f"{icon} **__{url} – {state.capitalize()}__**\n"
+            text += f"{icon} **__{url} – {state.upper()}__**\n"
             
     await message.reply_text(text)
