@@ -7,13 +7,16 @@ from info import URLS, ADMIN, CHECK_INTERVAL
 # Format: {'url': 'online'} or {'url': 'offline'}
 url_states = {}
 
+# --- MONITORING LOGIC ---
+
 async def check_url(session, url):
     """
     Checks the status of a URL.
     Returns: (is_online: bool, status_code: int/str)
     """
     try:
-        async with session.get(url, timeout=10) as response:
+        # Use a longer timeout for the check
+        async with session.get(url, timeout=15) as response:
             if response.status == 200:
                 return True, response.status
             else:
@@ -27,9 +30,9 @@ async def monitor_task(app: Client):
     """
     print("Started Monitoring Service...")
     
-    # Send a startup message
     try:
-        await app.send_message(ADMIN, "🤖 **Uptime Monitor Started**\nI am now watching your services.")
+        # Send a startup message to the admin
+        await app.send_message(ADMIN, "🤖 **Uptime Monitor Started**\nI am now actively watching your services.")
     except Exception as e:
         print(f"Failed to send startup message: {e}")
 
@@ -38,11 +41,10 @@ async def monitor_task(app: Client):
             for url in URLS:
                 is_online, status = await check_url(session, url)
                 
-                # Determine previous state (default to None if first run)
                 prev_state = url_states.get(url)
 
                 if is_online:
-                    # If it was previously offline, notify recovery
+                    # Notify recovery only if it was previously offline
                     if prev_state == 'offline':
                         await app.send_message(
                             ADMIN,
@@ -56,24 +58,22 @@ async def monitor_task(app: Client):
                     # If it is currently offline
                     print(f"URL {url} is DOWN. Status: {status}")
                     
-                    # Logic: It's down. "Trigger" it implies we just tried to GET it. 
-                    # If the first check failed, we try one more 'force' trigger immediately.
-                    
                     if prev_state != 'offline':
-                        # Try to "Make it alive" (Retry connection immediately)
+                        # Try to 'wake it up' immediately (Trigger)
                         retry_online, retry_status = await check_url(session, url)
                         
                         if retry_online:
+                            # Notify: Successfully revived
                             await app.send_message(
                                 ADMIN,
                                 f"⚠️ **Service Hiccough Detected**\n\n"
                                 f"🔗 **URL:** `{url}`\n"
-                                f"🔻 **Initial:** Offline\n"
                                 f"⚡️ **Action:** Triggered/Retried immediately.\n"
                                 f"✅ **Result:** Service is back Online!"
                             )
                             url_states[url] = 'online'
                         else:
+                            # Notify: Down and revival failed
                             await app.send_message(
                                 ADMIN,
                                 f"❌ **Service is DOWN**\n\n"
@@ -86,19 +86,37 @@ async def monitor_task(app: Client):
             # Wait for the next interval
             await asyncio.sleep(CHECK_INTERVAL)
 
-# We need a way to start this task. 
-# Since this is a plugin file, we can hook into the 'start' command 
-# or simply expose the function to be called by main.py.
-# However, to keep main.py clean, we can use a startup hook here if using Pyrogram v2.1+,
-# but the most reliable way across versions is creating a simple start command 
-# or calling this function from main.py.
-# 
-# BELOW: A command to check status manually
-@Client.on_message(filters.command("stats") & filters.user(ADMIN))
+# --- COMMAND HANDLERS ---
+
+# Handles the /start command with the requested styled text
+@Client.on_message(filters.command("start") & filters.private & filters.user(ADMIN))
+async def start_command(client, message):
+    """
+    Greets the admin with a stylized message about the bot's monitoring function.
+    """
+    # Using the requested style and adapting the content to Uptime Monitoring
+    start_message = (
+        "<blockquote>‣ Hᴇʟʟᴏ\n"
+        "I ᴀᴍ Lᴀᴛᴇsᴛ Aᴅᴠᴀɴᴄᴇᴅ **Uptime Monitor Bᴏᴛ**.\n"
+        "Cᴏᴅᴇᴅ & Dᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ NᴇᴏɴAɴᴜʀᴀɢ.\n"
+        "I ᴄᴀɴ **Monitor** ᴀɴᴅ **Auto-Revive** Yᴏᴜʀ ᴡᴇʙsᴇʀᴠɪᴄᴇs.\n"
+        "Uѕᴇ /stats ғᴏʀ ᴀ ᴄᴜʀʀᴇɴᴛ ʀᴇᴘᴏʀᴛ.</blockquote>"
+    )
+    await message.reply_text(start_message)
+
+# Handles the /stats command
+@Client.on_message(filters.command("stats") & filters.private & filters.user(ADMIN))
 async def stats_command(client, message):
+    """
+    Provides a manual status report for all monitored URLs.
+    """
     text = "📊 **Current Status Report**\n\n"
-    for url in URLS:
-        state = url_states.get(url, "Unknown")
-        icon = "🟢" if state == "online" else "🔴"
-        text += f"{icon} `{url}` : **{state.upper()}**\n"
+    if not URLS:
+        text += "No URLs configured in `info.py`."
+    else:
+        for url in URLS:
+            state = url_states.get(url, "Unknown")
+            icon = "🟢" if state == "online" else "🔴"
+            text += f"{icon} `{url}` : **{state.upper()}**\n"
+            
     await message.reply_text(text)
