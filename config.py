@@ -15,8 +15,8 @@ PORT = int(os.environ.get("PORT", "8080"))
 
 # List of URLs to monitor
 URLS = [
-    "https://google.com",
-    "https://github.com",
+    "https://saverestrictions-bot.onrender.com/",
+    "https://telegraph-bot-q90q.onrender.com/",
 ]
 
 # How often to check in seconds
