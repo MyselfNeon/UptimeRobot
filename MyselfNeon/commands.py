@@ -1,6 +1,6 @@
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
-from pyrogram.errors import UserNotParticipant
+from pyrogram.errors import UserNotParticipant, ChatAdminRequired, PeerIdInvalid
 from info import ADMIN, FORCE_SUB
 from database import db
 from MyselfNeon.monitor import url_states, check_url
@@ -16,15 +16,15 @@ async def is_subscribed(client, message):
         return True
     except UserNotParticipant:
         return False
+    except (ChatAdminRequired, PeerIdInvalid):
+        if message.from_user.id == ADMIN:
+            await message.reply_text("⚠️ **Config Error:** Bot is not an admin in the Force Sub channel.")
+        return True
     except Exception as e:
         print(f"Force Sub Error: {e}")
         return True
 
 async def force_sub_decorator(client, message):
-    """
-    Returns True if user is subscribed, False if not.
-    If False, sends the Access Denied message.
-    """
     if not await is_subscribed(client, message):
         try:
             chat_id = int(FORCE_SUB) if str(FORCE_SUB).lstrip('-').isdigit() else FORCE_SUB
@@ -39,7 +39,7 @@ async def force_sub_decorator(client, message):
         
         await message.reply_text(
             f"⛔ **ACCESS DENIED** ⛔\n\n"
-            f"You are not authorized to use this command. Join the update channel to authorize yourself.",
+            f"You are not authorized to use this command. Join {invite_link} to authorize yourself.",
             reply_markup=buttons
         )
         return False
@@ -48,11 +48,11 @@ async def force_sub_decorator(client, message):
 # --- START COMMAND ---
 @Client.on_message(filters.command("start") & filters.private)
 async def start_command(client, message):
+    # 1. PRIORITY: Force Sub Check
     if not await force_sub_decorator(client, message):
         return
 
     interval = await db.get_interval()
-    # CHANGED: Dynamic Name
     user_name = message.from_user.first_name
     
     text = (
@@ -74,7 +74,7 @@ async def start_command(client, message):
     
     await message.reply_text(text, reply_markup=buttons)
 
-# --- CALLBACK HANDLERS (NAVIGATION) ---
+# --- CALLBACK HANDLERS ---
 @Client.on_callback_query(filters.regex("^cb_"))
 async def cb_handler(client, query):
     data = query.data
@@ -118,7 +118,6 @@ async def cb_handler(client, query):
 
     elif data == "cb_back":
         interval = await db.get_interval()
-        # CHANGED: Dynamic Name for Back Button
         user_name = query.from_user.first_name
         
         text = (
@@ -138,13 +137,18 @@ async def cb_handler(client, query):
         ])
         await query.message.edit_text(text, reply_markup=buttons)
 
-# --- MONITORING COMMANDS ---
-
-@Client.on_message(filters.command("add") & filters.private & filters.user(ADMIN))
+# --- ADD URL COMMAND ---
+@Client.on_message(filters.command("add") & filters.private)
 async def add_url_command(client, message):
+    # 1. PRIORITY: Force Sub Check
     if not await force_sub_decorator(client, message):
         return
 
+    # 2. PRIORITY: Admin Check
+    if message.from_user.id != ADMIN:
+        return await message.reply_text("⛔ **Admin Only!** You cannot use this command.")
+
+    # 3. PRIORITY: Argument Check
     if len(message.command) < 2:
         return await message.reply_text("⚠️ Usage: `/add https://example.com`")
     
@@ -158,11 +162,18 @@ async def add_url_command(client, message):
     await db.add_url(url)
     await message.reply_text(f"✅ Added to monitor: `{url}`")
 
-@Client.on_message(filters.command("del") & filters.private & filters.user(ADMIN))
+# --- DELETE URL COMMAND ---
+@Client.on_message(filters.command("del") & filters.private)
 async def delete_url_command(client, message):
+    # 1. PRIORITY: Force Sub Check
     if not await force_sub_decorator(client, message):
         return
 
+    # 2. PRIORITY: Admin Check
+    if message.from_user.id != ADMIN:
+        return await message.reply_text("⛔ **Admin Only!** You cannot use this command.")
+
+    # 3. PRIORITY: Argument Check
     if len(message.command) < 2:
         return await message.reply_text("⚠️ Usage: `/del https://example.com`")
     
@@ -175,10 +186,16 @@ async def delete_url_command(client, message):
         del url_states[url]
     await message.reply_text(f"🗑 Removed from monitor: `{url}`")
 
-@Client.on_message(filters.command(["check", "stats"]) & filters.private & filters.user(ADMIN))
+# --- STATS COMMAND ---
+@Client.on_message(filters.command(["check", "stats"]) & filters.private)
 async def stats_command(client, message):
+    # 1. PRIORITY: Force Sub Check
     if not await force_sub_decorator(client, message):
         return
+    
+    # 2. PRIORITY: Admin Check
+    if message.from_user.id != ADMIN:
+        return await message.reply_text("⛔ **Admin Only!** You cannot use this command.")
 
     msg = await message.reply_text("🔄 Checking status of all services...")
     urls = await db.get_urls()
@@ -197,11 +214,16 @@ async def stats_command(client, message):
             
     await msg.edit_text(text)
 
-# --- TIME COMMAND & HANDLERS ---
-@Client.on_message(filters.command("time") & filters.private & filters.user(ADMIN))
+# --- TIME COMMAND ---
+@Client.on_message(filters.command("time") & filters.private)
 async def time_command(client, message):
+    # 1. PRIORITY: Force Sub Check
     if not await force_sub_decorator(client, message):
         return
+
+    # 2. PRIORITY: Admin Check
+    if message.from_user.id != ADMIN:
+        return await message.reply_text("⛔ **Admin Only!** You cannot use this command.")
 
     current_interval = await db.get_interval()
     buttons = InlineKeyboardMarkup([
@@ -216,11 +238,16 @@ async def time_callback(client, callback_query):
         await callback_query.answer()
         await callback_query.message.reply_text("📝 **Send new interval in seconds:**", reply_markup=ForceReply(selective=True))
 
-@Client.on_message(filters.reply & filters.private & filters.user(ADMIN))
+@Client.on_message(filters.reply & filters.private)
 async def set_time_input(client, message):
+    # 1. PRIORITY: Force Sub Check
     if not await force_sub_decorator(client, message):
         return
 
+    # 2. PRIORITY: Admin Check
+    if message.from_user.id != ADMIN:
+        return
+        
     if message.reply_to_message.text and "Send new interval" in message.reply_to_message.text:
         try:
             new_time = int(message.text)
