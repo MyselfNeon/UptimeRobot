@@ -1,61 +1,20 @@
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
-from pyrogram.errors import UserNotParticipant, ChatAdminRequired, PeerIdInvalid
-from info import ADMIN, FORCE_SUB
+from info import AUTH_USERS
 from database import db
 from MyselfNeon.monitor import url_states, check_url
 import aiohttp
 
-# --- FORCE SUBSCRIBE CHECK ---
-async def is_subscribed(client, message):
-    if not FORCE_SUB:
-        return True
-        
-    user_id = message.from_user.id
-    try:
-        # Smart conversion: Use int for IDs, keep string for usernames
-        if str(FORCE_SUB).startswith("-100") or str(FORCE_SUB).lstrip('-').isdigit():
-            chat_id = int(FORCE_SUB)
-        else:
-            chat_id = str(FORCE_SUB) # Handle @Username cases
-            
-        await client.get_chat_member(chat_id, user_id)
-        return True
-    except UserNotParticipant:
-        return False
-    except (ChatAdminRequired, PeerIdInvalid) as e:
-        # FAIL CLOSED: If bot can't check, assume NOT subscribed.
-        # This prevents strangers from bypassing the check if config is wrong.
-        print(f"Force Sub Check Failed: {e}")
-        return False
-    except Exception as e:
-        print(f"Unexpected Force Sub Error: {e}")
-        return False
-
-async def force_sub_decorator(client, message):
-    if not await is_subscribed(client, message):
-        invite_link = "https://t.me/NeonFiles" # Default Fallback
-        try:
-            # Try to get the real link
-            if str(FORCE_SUB).startswith("-100") or str(FORCE_SUB).lstrip('-').isdigit():
-                chat_id = int(FORCE_SUB)
-            else:
-                chat_id = str(FORCE_SUB)
-            
-            # This only works if Bot is Admin
-            invite_link = await client.export_chat_invite_link(chat_id)
-        except Exception as e:
-            pass # Keep default link if export fails
-
-        buttons = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔗 JOIN CHANNEL TO AUTHORIZE", url=invite_link)],
-            [InlineKeyboardButton("🔄 TRY AGAIN", url=f"https://t.me/{client.me.username}?start=start")]
-        ])
-        
+# --- AUTHORIZATION CHECK ---
+async def check_auth(message):
+    """
+    Checks if the user is in the AUTH_USERS list.
+    If not, sends the Access Denied message.
+    """
+    if message.from_user.id not in AUTH_USERS:
         await message.reply_text(
-            f"⛔ **ACCESS DENIED** ⛔\n\n"
-            f"You are not authorized to use this command. Join the update channel to authorize yourself.",
-            reply_markup=buttons
+            "⛔ **ACCESS DENIED** ⛔\n\n"
+            "You are not authorized to use this command. Only Admins and Auth Users are authorized to use the Commands !!"
         )
         return False
     return True
@@ -63,8 +22,8 @@ async def force_sub_decorator(client, message):
 # --- START COMMAND ---
 @Client.on_message(filters.command("start") & filters.private)
 async def start_command(client, message):
-    # 1. PRIORITY: Force Sub Check
-    if not await force_sub_decorator(client, message):
+    # 1. Authorization Check
+    if not await check_auth(message):
         return
 
     interval = await db.get_interval()
@@ -89,9 +48,14 @@ async def start_command(client, message):
     
     await message.reply_text(text, reply_markup=buttons)
 
-# --- CALLBACK HANDLERS ---
+# --- CALLBACK HANDLERS (Navigation) ---
+# Note: Callbacks also need auth check if you want to prevent clicking buttons
 @Client.on_callback_query(filters.regex("^cb_"))
 async def cb_handler(client, query):
+    # Optional: Check auth on button clicks too
+    if query.from_user.id not in AUTH_USERS:
+        return await query.answer("⛔ Access Denied", show_alert=True)
+
     data = query.data
     
     if data == "cb_all_bots":
@@ -155,13 +119,8 @@ async def cb_handler(client, query):
 # --- ADD URL COMMAND ---
 @Client.on_message(filters.command("add") & filters.private)
 async def add_url_command(client, message):
-    # 1. PRIORITY: Force Sub Check
-    if not await force_sub_decorator(client, message):
+    if not await check_auth(message):
         return
-
-    # 2. PRIORITY: Admin Check
-    if message.from_user.id != ADMIN:
-        return await message.reply_text("⛔ **Admin Only!** You cannot use this command.")
 
     if len(message.command) < 2:
         return await message.reply_text("⚠️ Usage: `/add https://example.com`")
@@ -179,13 +138,8 @@ async def add_url_command(client, message):
 # --- DELETE URL COMMAND ---
 @Client.on_message(filters.command("del") & filters.private)
 async def delete_url_command(client, message):
-    # 1. PRIORITY: Force Sub Check
-    if not await force_sub_decorator(client, message):
+    if not await check_auth(message):
         return
-
-    # 2. PRIORITY: Admin Check
-    if message.from_user.id != ADMIN:
-        return await message.reply_text("⛔ **Admin Only!** You cannot use this command.")
 
     if len(message.command) < 2:
         return await message.reply_text("⚠️ Usage: `/del https://example.com`")
@@ -202,13 +156,8 @@ async def delete_url_command(client, message):
 # --- STATS COMMAND ---
 @Client.on_message(filters.command(["check", "stats"]) & filters.private)
 async def stats_command(client, message):
-    # 1. PRIORITY: Force Sub Check
-    if not await force_sub_decorator(client, message):
+    if not await check_auth(message):
         return
-    
-    # 2. PRIORITY: Admin Check
-    if message.from_user.id != ADMIN:
-        return await message.reply_text("⛔ **Admin Only!** You cannot use this command.")
 
     msg = await message.reply_text("🔄 Checking status of all services...")
     urls = await db.get_urls()
@@ -230,13 +179,8 @@ async def stats_command(client, message):
 # --- TIME COMMAND ---
 @Client.on_message(filters.command("time") & filters.private)
 async def time_command(client, message):
-    # 1. PRIORITY: Force Sub Check
-    if not await force_sub_decorator(client, message):
+    if not await check_auth(message):
         return
-
-    # 2. PRIORITY: Admin Check
-    if message.from_user.id != ADMIN:
-        return await message.reply_text("⛔ **Admin Only!** You cannot use this command.")
 
     current_interval = await db.get_interval()
     buttons = InlineKeyboardMarkup([
@@ -246,6 +190,10 @@ async def time_command(client, message):
 
 @Client.on_callback_query(filters.regex("time_"))
 async def time_callback(client, callback_query):
+    # Check Auth on callback
+    if callback_query.from_user.id not in AUTH_USERS:
+        return await callback_query.answer("⛔ Access Denied", show_alert=True)
+
     data = callback_query.data
     if data == "time_change":
         await callback_query.answer()
@@ -253,12 +201,7 @@ async def time_callback(client, callback_query):
 
 @Client.on_message(filters.reply & filters.private)
 async def set_time_input(client, message):
-    # 1. PRIORITY: Force Sub Check
-    if not await force_sub_decorator(client, message):
-        return
-
-    # 2. PRIORITY: Admin Check
-    if message.from_user.id != ADMIN:
+    if not await check_auth(message):
         return
         
     if message.reply_to_message.text and "Send new interval" in message.reply_to_message.text:
