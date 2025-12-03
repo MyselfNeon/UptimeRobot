@@ -21,19 +21,25 @@ async def is_subscribed(client, message):
         return True
 
 async def force_sub_decorator(client, message):
+    """
+    Returns True if user is subscribed, False if not.
+    If False, sends the Access Denied message.
+    """
     if not await is_subscribed(client, message):
         try:
-            invite_link = await client.export_chat_invite_link(int(FORCE_SUB) if str(FORCE_SUB).lstrip('-').isdigit() else FORCE_SUB)
+            chat_id = int(FORCE_SUB) if str(FORCE_SUB).lstrip('-').isdigit() else FORCE_SUB
+            invite_link = await client.export_chat_invite_link(chat_id)
         except:
             invite_link = "https://t.me/NeonFiles"
 
         buttons = InlineKeyboardMarkup([
-            [InlineKeyboardButton("🔔 Join Update Channel", url=invite_link)],
-            [InlineKeyboardButton("🔄 Try Again", url=f"https://t.me/{client.me.username}?start=start")]
+            [InlineKeyboardButton("🔗 JOIN CHANNEL TO AUTHORIZE", url=invite_link)],
+            [InlineKeyboardButton("🔄 TRY AGAIN", url=f"https://t.me/{client.me.username}?start=start")]
         ])
+        
         await message.reply_text(
-            "⚠️ **Access Denied!**\n\n"
-            "You must join our update channel to use this bot.",
+            f"⛔ **ACCESS DENIED** ⛔\n\n"
+            f"You are not authorized to use this command. Join the update channel to authorize yourself.",
             reply_markup=buttons
         )
         return False
@@ -46,9 +52,11 @@ async def start_command(client, message):
         return
 
     interval = await db.get_interval()
+    # CHANGED: Dynamic Name
+    user_name = message.from_user.first_name
     
     text = (
-        "‣ Hᴇʟʟᴏ 𐌽𐌴𐌏𐌽 🇮🇳\n"
+        f"‣ Hᴇʟʟᴏ {user_name} 🇮🇳\n"
         "I ᴀᴍ Lᴀᴛᴇsᴛ Aᴅᴠᴀɴᴄᴇᴅ **Keep-Alive Monitor Bᴏᴛ**.\n"
         "Cᴏᴅᴇᴅ & Dᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ NᴇᴏɴAɴᴜʀᴀɢ.\n"
         f"I ᴄᴀɴ **Trigger** ᴀɴᴅ **Monitor** Yᴏᴜʀ ᴡᴇʙsᴇʀᴠɪᴄᴇs ᴇᴠᴇʀʏ **{interval}** ѕᴇᴄᴏɴᴅs.\n\n"
@@ -77,7 +85,6 @@ async def cb_handler(client, query):
             "Here are some of the other bots and projects I have worked on.\n"
             "Check out the update channel for the latest news!"
         )
-        # CHANGED: Side by side
         buttons = InlineKeyboardMarkup([
             [
                 InlineKeyboardButton("UPDATE CHANNEL", url="https://t.me/NeonFiles"),
@@ -97,7 +104,6 @@ async def cb_handler(client, query):
             "• Bᴏᴛ Sᴇʀᴠᴇʀ : Hᴇʀᴏᴋᴜ\n" 
             "• Bᴜɪʟᴅ Sᴛᴀᴛᴜs : ᴠ𝟸.𝟽.𝟷 [Sᴛᴀʙʟᴇ]"
         )
-        # CHANGED: Support/Source (Row 1), Developer/Back (Row 2)
         buttons = InlineKeyboardMarkup([
             [
                 InlineKeyboardButton("SUPPORT", url="https://t.me/support"),
@@ -112,8 +118,11 @@ async def cb_handler(client, query):
 
     elif data == "cb_back":
         interval = await db.get_interval()
+        # CHANGED: Dynamic Name for Back Button
+        user_name = query.from_user.first_name
+        
         text = (
-            "‣ Hᴇʟʟᴏ 𐌽𐌴𐌏𐌽 🇮🇳\n"
+            f"‣ Hᴇʟʟᴏ {user_name} 🇮🇳\n"
             "I ᴀᴍ Lᴀᴛᴇsᴛ Aᴅᴠᴀɴᴄᴇᴅ **Keep-Alive Monitor Bᴏᴛ**.\n"
             "Cᴏᴅᴇᴅ & Dᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ NᴇᴏɴAɴᴜʀᴀɢ.\n"
             f"I ᴄᴀɴ **Trigger** ᴀɴᴅ **Monitor** Yᴏᴜʀ ᴡᴇʙsᴇʀᴠɪᴄᴇs ᴇᴠᴇʀʏ **{interval}** ѕᴇᴄᴏɴᴅs.\n\n"
@@ -130,8 +139,12 @@ async def cb_handler(client, query):
         await query.message.edit_text(text, reply_markup=buttons)
 
 # --- MONITORING COMMANDS ---
+
 @Client.on_message(filters.command("add") & filters.private & filters.user(ADMIN))
 async def add_url_command(client, message):
+    if not await force_sub_decorator(client, message):
+        return
+
     if len(message.command) < 2:
         return await message.reply_text("⚠️ Usage: `/add https://example.com`")
     
@@ -147,6 +160,9 @@ async def add_url_command(client, message):
 
 @Client.on_message(filters.command("del") & filters.private & filters.user(ADMIN))
 async def delete_url_command(client, message):
+    if not await force_sub_decorator(client, message):
+        return
+
     if len(message.command) < 2:
         return await message.reply_text("⚠️ Usage: `/del https://example.com`")
     
@@ -161,6 +177,9 @@ async def delete_url_command(client, message):
 
 @Client.on_message(filters.command(["check", "stats"]) & filters.private & filters.user(ADMIN))
 async def stats_command(client, message):
+    if not await force_sub_decorator(client, message):
+        return
+
     msg = await message.reply_text("🔄 Checking status of all services...")
     urls = await db.get_urls()
     
@@ -181,8 +200,10 @@ async def stats_command(client, message):
 # --- TIME COMMAND & HANDLERS ---
 @Client.on_message(filters.command("time") & filters.private & filters.user(ADMIN))
 async def time_command(client, message):
+    if not await force_sub_decorator(client, message):
+        return
+
     current_interval = await db.get_interval()
-    # CHANGED: Removed Reset button, kept only Change Time
     buttons = InlineKeyboardMarkup([
         [InlineKeyboardButton("CHANGE TIME", callback_data="time_change")]
     ])
@@ -191,13 +212,15 @@ async def time_command(client, message):
 @Client.on_callback_query(filters.regex("time_"))
 async def time_callback(client, callback_query):
     data = callback_query.data
-    # Removed time_reset block
     if data == "time_change":
         await callback_query.answer()
         await callback_query.message.reply_text("📝 **Send new interval in seconds:**", reply_markup=ForceReply(selective=True))
 
 @Client.on_message(filters.reply & filters.private & filters.user(ADMIN))
 async def set_time_input(client, message):
+    if not await force_sub_decorator(client, message):
+        return
+
     if message.reply_to_message.text and "Send new interval" in message.reply_to_message.text:
         try:
             new_time = int(message.text)
