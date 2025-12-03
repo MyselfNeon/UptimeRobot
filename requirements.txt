@@ -1,3 +1,5 @@
 pyrofork
 tgcrypto
 aiohttp
+motor
+dnspython
