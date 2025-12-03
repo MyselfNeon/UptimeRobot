@@ -5,6 +5,7 @@ from database import db
 from MyselfNeon.monitor import url_states, check_url
 import aiohttp
 
+# --- AUTHORIZATION CHECK ---
 async def check_auth(message):
     """
     Checks if the user is in the AUTH_USERS list.
@@ -13,7 +14,7 @@ async def check_auth(message):
     if message.from_user.id not in AUTH_USERS:
         await message.reply_text(
             "⛔ **ACCESS DENIED** ⛔\n\n"
-            "__You are not Authorized to use these Command. Only Admins and Auth Users are Authorized to use these Commands !!__"
+            "You are not authorized to use this command. Only Admins and Auth Users are authorized to use the Commands !!"
         )
         return False
     return True
@@ -29,25 +30,26 @@ async def start_command(client, message):
     user_name = message.from_user.first_name
     
     text = (
-        f"__Hello **{user_name}**__\n"
-        "__I am Latest Advanced Keep-Alive__\n"
-        "__Monitor Bot, Coded by **@MyselfNeon**__\n"
-        f"__I can Trigger and Monitor your Websites every **{interval}** Seconds ⏰.__\n\n"
-        "**__My Commands :__**\n"
-        "/add (url) - __Monitor a new URL__\n"
-        "/del (url) - __Delete an URL__\n"
-        "/check - __Manual Check Status__\n"
-        "/time - __Set Monitor Interval__"
+        f"‣ Hᴇʟʟᴏ {user_name} 🇮🇳\n"
+        "I ᴀᴍ Lᴀᴛᴇsᴛ Aᴅᴠᴀɴᴄᴇᴅ **Keep-Alive Monitor Bᴏᴛ**.\n"
+        "Cᴏᴅᴇᴅ & Dᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ NᴇᴏɴAɴᴜʀᴀɢ.\n"
+        f"I ᴄᴀɴ **Trigger** ᴀɴᴅ **Monitor** Yᴏᴜʀ ᴡᴇʙsᴇʀᴠɪᴄᴇs ᴇᴠᴇʀʏ **{interval}** ѕᴇᴄᴏɴᴅs.\n\n"
+        "**Commands:**\n"
+        "/add `url` - Monitor a new URL\n"
+        "/del `url` - Delete a URL\n"
+        "/check - Manual check status\n"
+        "/time - Set monitor interval"
     )
     
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🤖 Aʟʟ Bᴏᴛs", callback_data="cb_all_bots"),
-         InlineKeyboardButton("😎 Aʙᴏᴜᴛ Mᴇ", callback_data="cb_about_me")]
+        [InlineKeyboardButton("All Bots", callback_data="cb_all_bots"),
+         InlineKeyboardButton("About Me", callback_data="cb_about_me")]
     ])
     
     await message.reply_text(text, reply_markup=buttons)
 
 # --- CALLBACK HANDLERS (Navigation) ---
+# Note: Callbacks also need auth check if you want to prevent clicking buttons
 @Client.on_callback_query(filters.regex("^cb_"))
 async def cb_handler(client, query):
     # Optional: Check auth on button clicks too
@@ -58,37 +60,37 @@ async def cb_handler(client, query):
     
     if data == "cb_all_bots":
         text = (
-            "🤖 **__My Other Bots__**\n\n"
+            "🤖 **My Other Bots**\n\n"
             "Here are some of the other bots and projects I have worked on.\n"
             "Check out the update channel for the latest news!"
         )
         buttons = InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("📝 Uᴘᴅᴀᴛᴇs", url="https://t.me/NeonFiles"),
-                InlineKeyboardButton("🔙 Bᴀᴄᴋ", callback_data="cb_back")
+                InlineKeyboardButton("UPDATE CHANNEL", url="https://t.me/NeonFiles"),
+                InlineKeyboardButton("BACK", callback_data="cb_back")
             ]
         ])
         await query.message.edit_text(text, reply_markup=buttons)
         
     elif data == "cb_about_me":
         text = (
-            "<i><b>• Mʏ Nᴀᴍᴇ : <a href='https://t.me/Uptime_oBot'>Uptime Robot</a>\n"
-            "• Mʏ Bᴇsᴛ Fʀɪᴇɴᴅ : <a href='tg://settings'>Tʜɪs Sᴡᴇᴇᴛɪᴇ ❤️</a>\n"
-            "• Dᴇᴠᴇʟᴏᴘᴇʀ : <a href='https://t.me/MyselfNeon'>@MyselfNeon</a>\n"
-            "• Lɪʙʀᴀʀʏ : <a href='https://docs.pyrogram.org/'>Pʏʀᴏɢʀᴀᴍ</a>\n"
-            "• Lᴀɴɢᴜᴀɢᴇ : <a href='https://www.python.org/download/releases/3.0/'>Pʏᴛʜᴏɴ 𝟹</a>\n"
-            "• DᴀᴛᴀBᴀsᴇ : <a href='https://www.mongodb.com/'>Mᴏɴɢᴏ DB</a>\n"
-            "• Bᴏᴛ Sᴇʀᴠᴇʀ : <a href='https://heroku.com'>Hᴇʀᴏᴋᴜ</a>\n"
-            "• Bᴜɪʟᴅ Sᴛᴀᴛᴜs : ᴠ𝟸.𝟽 [Sᴛᴀʙʟᴇ]</i></b>"
+            "• Mʏ Nᴀᴍᴇ : Auto Filter™\n"
+            "• Mʏ Bᴇsᴛ Fʀɪᴇɴᴅ : Tʜɪs Sᴡᴇᴇᴛɪᴇ ❤️\n" 
+            "• Dᴇᴠᴇʟᴏᴘᴇʀ : @MʏsᴇʟғNᴇᴏɴ\n" 
+            "• Lɪʙʀᴀʀʏ : Pʏʀᴏɢʀᴀᴍ\n" 
+            "• Lᴀɴɢᴜᴀɢᴇ : Pʏᴛʜᴏɴ 𝟹\n" 
+            "• DᴀᴛᴀBᴀsᴇ : Mᴏɴɢᴏ DB\n" 
+            "• Bᴏᴛ Sᴇʀᴠᴇʀ : Hᴇʀᴏᴋᴜ\n" 
+            "• Bᴜɪʟᴅ Sᴛᴀᴛᴜs : ᴠ𝟸.𝟽.𝟷 [Sᴛᴀʙʟᴇ]"
         )
         buttons = InlineKeyboardMarkup([
             [
-                InlineKeyboardButton("🫡 Sᴜᴘᴘᴏʀᴛ", url="https://t.me/+o1s-8MppL2syYTI9"),
-                InlineKeyboardButton("🛐 Sᴏᴜʀᴄᴇ Cᴏᴅᴇ", url="https://myselfneon.github.io/neon/")
+                InlineKeyboardButton("SUPPORT", url="https://t.me/support"),
+                InlineKeyboardButton("SOURCE CODE", url="https://myselfneon.github.io/neon/")
             ],
             [
-                InlineKeyboardButton("👨‍💻 Dᴇᴠᴇʟᴏᴘᴇʀ", url="https://t.me/myselfneon"),
-                InlineKeyboardButton("🔙 Bᴀᴄᴋ", callback_data="cb_back")
+                InlineKeyboardButton("DEVELOPER", url="https://t.me/myselfneon"),
+                InlineKeyboardButton("BACK", callback_data="cb_back")
             ]
         ])
         await query.message.edit_text(text, reply_markup=buttons)
@@ -98,15 +100,15 @@ async def cb_handler(client, query):
         user_name = query.from_user.first_name
         
         text = (
-            f"__Hello **{user_name}**__\n"
-            "__I am Latest Advanced Keep-Alive__\n"
-            "__Monitor Bot, Coded by **@MyselfNeon**__\n"
-            f"__I can Trigger and Monitor your Websites every **{interval}** Seconds ⏰.__\n\n"
-            "**__Commands:__**\n"
-            "/add (url) - __Monitor a new URL__\n"
-            "/del (url) - __Delete an URL__\n"
-            "/check - __Manual check Status__\n"
-            "/time - __Set monitor Interval__"
+            f"‣ Hᴇʟʟᴏ {user_name} 🇮🇳\n"
+            "I ᴀᴍ Lᴀᴛᴇsᴛ Aᴅᴠᴀɴᴄᴇᴅ **Keep-Alive Monitor Bᴏᴛ**.\n"
+            "Cᴏᴅᴇᴅ & Dᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ NᴇᴏɴAɴᴜʀᴀɢ.\n"
+            f"I ᴄᴀɴ **Trigger** ᴀɴᴅ **Monitor** Yᴏᴜʀ ᴡᴇʙsᴇʀᴠɪᴄᴇs ᴇᴠᴇʀʏ **{interval}** ѕᴇᴄᴏɴᴅs.\n\n"
+            "**Commands:**\n"
+            "/add `url` - Monitor a new URL\n"
+            "/del `url` - Delete a URL\n"
+            "/check - Manual check status\n"
+            "/time - Set monitor interval"
         )
         buttons = InlineKeyboardMarkup([
             [InlineKeyboardButton("All Bots", callback_data="cb_all_bots"),
@@ -121,17 +123,17 @@ async def add_url_command(client, message):
         return
 
     if len(message.command) < 2:
-        return await message.reply_text("⚠️ **__Usage:** /add https://example.com__")
+        return await message.reply_text("⚠️ Usage: `/add https://example.com`")
     
     url = message.command[1]
     if not url.startswith("http"):
-        return await message.reply_text("⚠️ **__Invalid URL.**\nMust start with http or https.__")
+        return await message.reply_text("⚠️ Invalid URL. Must start with http or https.")
     
     if await db.is_url_exist(url):
-        return await message.reply_text("⚠️ __URL is Already being Monitored.__")
+        return await message.reply_text("⚠️ URL is already being monitored.")
     
     await db.add_url(url)
-    await message.reply_text(f"✅ **__Added to Monitor :**\n– {url}__")
+    await message.reply_text(f"✅ Added to monitor: `{url}`")
 
 # --- DELETE URL COMMAND ---
 @Client.on_message(filters.command("del") & filters.private)
@@ -140,16 +142,16 @@ async def delete_url_command(client, message):
         return
 
     if len(message.command) < 2:
-        return await message.reply_text("⚠️ **__Usage:** /del https://example.com__")
+        return await message.reply_text("⚠️ Usage: `/del https://example.com`")
     
     url = message.command[1]
     if not await db.is_url_exist(url):
-        return await message.reply_text("⚠️ __This URL is not in the Database.__")
+        return await message.reply_text("⚠️ This URL is not in the database.")
     
     await db.remove_url(url)
     if url in url_states:
         del url_states[url]
-    await message.reply_text(f"🚮 **__Removed from Monitor__** : \n– __{url}__")
+    await message.reply_text(f"🗑 Removed from monitor: `{url}`")
 
 # --- STATS COMMAND ---
 @Client.on_message(filters.command(["check", "stats"]) & filters.private)
@@ -157,12 +159,12 @@ async def stats_command(client, message):
     if not await check_auth(message):
         return
 
-    msg = await message.reply_text("🔄 **__Checking status of all Services...__**")
+    msg = await message.reply_text("🔄 Checking status of all services...")
     urls = await db.get_urls()
     
-    text = "📊 **__Current Status Report__**\n\n"
+    text = "📊 **Current Status Report**\n\n"
     if not urls:
-        text += "__No URLs found in Database.__"
+        text += "No URLs found in Database."
     else:
         async with aiohttp.ClientSession() as session:
             for url in urls:
@@ -174,7 +176,7 @@ async def stats_command(client, message):
             
     await msg.edit_text(text)
 
-# --- Time Command ---
+# --- TIME COMMAND ---
 @Client.on_message(filters.command("time") & filters.private)
 async def time_command(client, message):
     if not await check_auth(message):
@@ -182,9 +184,9 @@ async def time_command(client, message):
 
     current_interval = await db.get_interval()
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("⏰ Cʜᴀɴɢᴇ Tɪᴍᴇ", callback_data="time_change")]
+        [InlineKeyboardButton("CHANGE TIME", callback_data="time_change")]
     ])
-    await message.reply_text(f"🕓 **__Monitoring Interval__**\➠ __Current Time : **{current_interval}s**__", reply_markup=buttons)
+    await message.reply_text(f"⏱ **Monitoring Interval**\nCurrent: **{current_interval}s**", reply_markup=buttons)
 
 @Client.on_callback_query(filters.regex("time_"))
 async def time_callback(client, callback_query):
@@ -195,7 +197,7 @@ async def time_callback(client, callback_query):
     data = callback_query.data
     if data == "time_change":
         await callback_query.answer()
-        await callback_query.message.reply_text("📝 **__Send new Interval in Seconds:__**", reply_markup=ForceReply(selective=True))
+        await callback_query.message.reply_text("📝 **Send new interval in seconds:**", reply_markup=ForceReply(selective=True))
 
 @Client.on_message(filters.reply & filters.private)
 async def set_time_input(client, message):
@@ -205,8 +207,8 @@ async def set_time_input(client, message):
     if message.reply_to_message.text and "Send new interval" in message.reply_to_message.text:
         try:
             new_time = int(message.text)
-            if new_time < 10: return await message.reply_text("⚠️ **__Minimum is 10s.__**")
+            if new_time < 10: return await message.reply_text("⚠️ Minimum is 10s.")
             await db.set_interval(new_time)
-            await message.reply_text(f"✅ **__Interval set to {new_time} !__**")
+            await message.reply_text(f"✅ Interval set to **{new_time}s**!")
         except ValueError:
-            await message.reply_text("⚠️ **__Invalid Number.__**")
+            await message.reply_text("⚠️ Invalid number.")
