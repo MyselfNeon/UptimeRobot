@@ -1,5 +1,5 @@
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply, Message
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
 from pyrogram.errors import UserNotParticipant
 from info import ADMIN, FORCE_SUB
 from database import db
@@ -11,7 +11,6 @@ async def is_subscribed(client, message):
     if not FORCE_SUB:
         return True
     try:
-        # Convert to int if it's an ID string
         chat_id = int(FORCE_SUB) if str(FORCE_SUB).lstrip('-').isdigit() else FORCE_SUB
         await client.get_chat_member(chat_id, message.from_user.id)
         return True
@@ -19,16 +18,13 @@ async def is_subscribed(client, message):
         return False
     except Exception as e:
         print(f"Force Sub Error: {e}")
-        # If bot is not admin in channel, allow user to proceed to avoid blocking
         return True
 
 async def force_sub_decorator(client, message):
     if not await is_subscribed(client, message):
         try:
-            # Try to get invite link if bot is admin
             invite_link = await client.export_chat_invite_link(int(FORCE_SUB) if str(FORCE_SUB).lstrip('-').isdigit() else FORCE_SUB)
         except:
-            # Fallback to the update channel link you provided
             invite_link = "https://t.me/NeonFiles"
 
         buttons = InlineKeyboardMarkup([
@@ -46,7 +42,6 @@ async def force_sub_decorator(client, message):
 # --- START COMMAND ---
 @Client.on_message(filters.command("start") & filters.private)
 async def start_command(client, message):
-    # Apply Force Sub Check
     if not await force_sub_decorator(client, message):
         return
 
@@ -82,9 +77,12 @@ async def cb_handler(client, query):
             "Here are some of the other bots and projects I have worked on.\n"
             "Check out the update channel for the latest news!"
         )
+        # CHANGED: Side by side
         buttons = InlineKeyboardMarkup([
-            [InlineKeyboardButton("UPDATE CHANNEL", url="https://t.me/NeonFiles")],
-            [InlineKeyboardButton("BACK", callback_data="cb_back")]
+            [
+                InlineKeyboardButton("UPDATE CHANNEL", url="https://t.me/NeonFiles"),
+                InlineKeyboardButton("BACK", callback_data="cb_back")
+            ]
         ])
         await query.message.edit_text(text, reply_markup=buttons)
         
@@ -99,11 +97,16 @@ async def cb_handler(client, query):
             "• Bᴏᴛ Sᴇʀᴠᴇʀ : Hᴇʀᴏᴋᴜ\n" 
             "• Bᴜɪʟᴅ Sᴛᴀᴛᴜs : ᴠ𝟸.𝟽.𝟷 [Sᴛᴀʙʟᴇ]"
         )
+        # CHANGED: Support/Source (Row 1), Developer/Back (Row 2)
         buttons = InlineKeyboardMarkup([
-            [InlineKeyboardButton("SUPPORT", url="https://t.me/support"),
-             InlineKeyboardButton("SOURCE CODE", url="https://myselfneon.github.io/neon/")],
-            [InlineKeyboardButton("DEVELOPER", url="https://t.me/myselfneon")],
-            [InlineKeyboardButton("BACK", callback_data="cb_back")]
+            [
+                InlineKeyboardButton("SUPPORT", url="https://t.me/support"),
+                InlineKeyboardButton("SOURCE CODE", url="https://myselfneon.github.io/neon/")
+            ],
+            [
+                InlineKeyboardButton("DEVELOPER", url="https://t.me/myselfneon"),
+                InlineKeyboardButton("BACK", callback_data="cb_back")
+            ]
         ])
         await query.message.edit_text(text, reply_markup=buttons)
 
@@ -126,8 +129,7 @@ async def cb_handler(client, query):
         ])
         await query.message.edit_text(text, reply_markup=buttons)
 
-# --- MONITORING COMMANDS (Add/Del/Check) ---
-
+# --- MONITORING COMMANDS ---
 @Client.on_message(filters.command("add") & filters.private & filters.user(ADMIN))
 async def add_url_command(client, message):
     if len(message.command) < 2:
@@ -180,20 +182,17 @@ async def stats_command(client, message):
 @Client.on_message(filters.command("time") & filters.private & filters.user(ADMIN))
 async def time_command(client, message):
     current_interval = await db.get_interval()
+    # CHANGED: Removed Reset button, kept only Change Time
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("Reset to Default (60s)", callback_data="time_reset"),
-         InlineKeyboardButton("Change Time", callback_data="time_change")]
+        [InlineKeyboardButton("CHANGE TIME", callback_data="time_change")]
     ])
     await message.reply_text(f"⏱ **Monitoring Interval**\nCurrent: **{current_interval}s**", reply_markup=buttons)
 
 @Client.on_callback_query(filters.regex("time_"))
 async def time_callback(client, callback_query):
     data = callback_query.data
-    if data == "time_reset":
-        await db.set_interval(60)
-        await callback_query.answer("Reset to 60s!")
-        await callback_query.message.edit_text("⏱ **Interval Reset**\nCurrent: **60s**")
-    elif data == "time_change":
+    # Removed time_reset block
+    if data == "time_change":
         await callback_query.answer()
         await callback_query.message.reply_text("📝 **Send new interval in seconds:**", reply_markup=ForceReply(selective=True))
 
