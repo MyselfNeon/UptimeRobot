@@ -16,3 +16,6 @@ PORT = int(os.environ.get("PORT", "8080"))
 # Database Configuration
 DB_URI = os.environ.get("DB_URI", "")
 DB_NAME = os.environ.get("DB_NAME", "UptimeBot")
+
+# Force Subscribe Channel ID (Default is the one you provided)
+FORCE_SUB = os.environ.get("FORCE_SUB", "-1002384933640")
