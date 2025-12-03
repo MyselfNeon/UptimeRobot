@@ -10,27 +10,42 @@ import aiohttp
 async def is_subscribed(client, message):
     if not FORCE_SUB:
         return True
+        
+    user_id = message.from_user.id
     try:
-        chat_id = int(FORCE_SUB) if str(FORCE_SUB).lstrip('-').isdigit() else FORCE_SUB
-        await client.get_chat_member(chat_id, message.from_user.id)
+        # Smart conversion: Use int for IDs, keep string for usernames
+        if str(FORCE_SUB).startswith("-100") or str(FORCE_SUB).lstrip('-').isdigit():
+            chat_id = int(FORCE_SUB)
+        else:
+            chat_id = str(FORCE_SUB) # Handle @Username cases
+            
+        await client.get_chat_member(chat_id, user_id)
         return True
     except UserNotParticipant:
         return False
-    except (ChatAdminRequired, PeerIdInvalid):
-        if message.from_user.id == ADMIN:
-            await message.reply_text("⚠️ **Config Error:** Bot is not an admin in the Force Sub channel.")
-        return True
+    except (ChatAdminRequired, PeerIdInvalid) as e:
+        # FAIL CLOSED: If bot can't check, assume NOT subscribed.
+        # This prevents strangers from bypassing the check if config is wrong.
+        print(f"Force Sub Check Failed: {e}")
+        return False
     except Exception as e:
-        print(f"Force Sub Error: {e}")
-        return True
+        print(f"Unexpected Force Sub Error: {e}")
+        return False
 
 async def force_sub_decorator(client, message):
     if not await is_subscribed(client, message):
+        invite_link = "https://t.me/NeonFiles" # Default Fallback
         try:
-            chat_id = int(FORCE_SUB) if str(FORCE_SUB).lstrip('-').isdigit() else FORCE_SUB
+            # Try to get the real link
+            if str(FORCE_SUB).startswith("-100") or str(FORCE_SUB).lstrip('-').isdigit():
+                chat_id = int(FORCE_SUB)
+            else:
+                chat_id = str(FORCE_SUB)
+            
+            # This only works if Bot is Admin
             invite_link = await client.export_chat_invite_link(chat_id)
-        except:
-            invite_link = "https://t.me/NeonFiles"
+        except Exception as e:
+            pass # Keep default link if export fails
 
         buttons = InlineKeyboardMarkup([
             [InlineKeyboardButton("🔗 JOIN CHANNEL TO AUTHORIZE", url=invite_link)],
@@ -39,7 +54,7 @@ async def force_sub_decorator(client, message):
         
         await message.reply_text(
             f"⛔ **ACCESS DENIED** ⛔\n\n"
-            f"You are not authorized to use this command. Join {invite_link} to authorize yourself.",
+            f"You are not authorized to use this command. Join the update channel to authorize yourself.",
             reply_markup=buttons
         )
         return False
@@ -148,7 +163,6 @@ async def add_url_command(client, message):
     if message.from_user.id != ADMIN:
         return await message.reply_text("⛔ **Admin Only!** You cannot use this command.")
 
-    # 3. PRIORITY: Argument Check
     if len(message.command) < 2:
         return await message.reply_text("⚠️ Usage: `/add https://example.com`")
     
@@ -173,7 +187,6 @@ async def delete_url_command(client, message):
     if message.from_user.id != ADMIN:
         return await message.reply_text("⛔ **Admin Only!** You cannot use this command.")
 
-    # 3. PRIORITY: Argument Check
     if len(message.command) < 2:
         return await message.reply_text("⚠️ Usage: `/del https://example.com`")
     
