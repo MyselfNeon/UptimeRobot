@@ -7,9 +7,23 @@ from database import db
 # Dictionary to store the previous state of URLs
 url_states = {}
 
+# --- MONITORING & KEEP-ALIVE LOGIC ---
 async def check_url(session, url, is_keep_alive=False):
+    """
+    Checks the status of a URL.
+    """
+    # MIMIC A REAL BROWSER (Fixes 403 and 429 Errors)
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
+        "Accept-Language": "en-US,en;q=0.5",
+        "Connection": "keep-alive",
+        "Upgrade-Insecure-Requests": "1"
+    }
+
     try:
-        async with session.get(url, timeout=15) as response:
+        # Added headers=headers to the request
+        async with session.get(url, timeout=15, headers=headers) as response:
             if response.status == 200:
                 return True, response.status
             else:
@@ -51,6 +65,10 @@ async def monitor_task(app: Client):
                         )
                     url_states[url] = 'online'
                 else:
+                    # Logic to handle specific 429 blocking silently if preferred
+                    if status == 429:
+                        print(f"Rate Limit (429) hit for {url}. The site is likely UP but blocking bots.")
+                    
                     if prev_state != 'offline':
                         await app.send_message(
                             ADMIN,
