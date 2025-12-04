@@ -60,9 +60,9 @@ async def cb_handler(client, query):
     
     if data == "cb_all_bots":
         text = (
-            "🤖 **My Other Bots**\n\n"
-            "__Here are some of the other bots and projects I have worked on.__"
-            "__Check out the update channel for the latest news!__"
+            "🤖 **__My Other Bots__**\n\n"
+            "**__Here are some of the other Bots and Projects I have worked on.__** "
+            "**__Check the Update Channel for the Latest News !__**"
         )
         buttons = InlineKeyboardMarkup([
             [
@@ -76,7 +76,7 @@ async def cb_handler(client, query):
         text = (
             "• Mʏ Nᴀᴍᴇ : Auto Filter™\n"
             "• Mʏ Bᴇsᴛ Fʀɪᴇɴᴅ : Tʜɪs Sᴡᴇᴇᴛɪᴇ ❤️\n" 
-            "• Dᴇᴠᴇʟᴏᴘᴇʀ : @MʏsᴇʟғNᴇᴏɴ\n" 
+            "• Dᴇᴠᴇʟᴏᴘᴇʀ : @MyselfNeon\n" 
             "• Lɪʙʀᴀʀʏ : Pʏʀᴏɢʀᴀᴍ\n" 
             "• Lᴀɴɢᴜᴀɢᴇ : Pʏᴛʜᴏɴ 𝟹\n" 
             "• DᴀᴛᴀBᴀsᴇ : Mᴏɴɢᴏ DB\n" 
@@ -164,7 +164,7 @@ async def stats_command(client, message):
     
     text = "📊 **__Current Status Report__**\n\n"
     if not urls:
-        text += "__No URLs found in Database.__"
+        text += "– __No URLs found in Database.__"
     else:
         async with aiohttp.ClientSession() as session:
             for url in urls:
@@ -176,7 +176,7 @@ async def stats_command(client, message):
             
     await msg.edit_text(text)
 
-# --- TIME COMMAND ---
+# --- Time Command ---
 @Client.on_message(filters.command("time") & filters.private)
 async def time_command(client, message):
     if not await check_auth(message):
@@ -207,8 +207,8 @@ async def set_time_input(client, message):
     if message.reply_to_message.text and "Send new interval" in message.reply_to_message.text:
         try:
             new_time = int(message.text)
-            if new_time < 10: return await message.reply_text("⚠️ Minimum is 10s.")
+            if new_time < 10: return await message.reply_text("⚠️ **__Minimum is 10s.__**")
             await db.set_interval(new_time)
-            await message.reply_text(f"✅ **__Interval set to {new_time}s!__**")
+            await message.reply_text(f"✅ **__Interval set to {new_time}s !__**")
         except ValueError:
             await message.reply_text("⚠️ **__Invalid Number.__**")
