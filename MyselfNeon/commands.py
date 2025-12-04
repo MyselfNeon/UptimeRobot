@@ -167,11 +167,20 @@ async def stats_command(client, message):
         text += "– __No URLs found in Database.__"
     else:
         async with aiohttp.ClientSession() as session:
-            for url in urls:
+            for index, url in enumerate(urls):
                 is_online, code = await check_url(session, url)
-                icon = "🟢" if is_online else "🔴"
-                status_text = "ONLINE" if is_online else f"OFFLINE ({code})"
-                text += f"{icon} `{url}`\n   ╚ **{status_text}**\n\n"
+                
+                # Determine status text and icon
+                if is_online:
+                    status_text = "ONLINE"
+                    icon = "🟢"
+                else:
+                    status_text = f"OFFLINE ({code})" if isinstance(code, int) and code not in (429, 200) else "OFFLINE"
+                    icon = "🔴"
+                
+                # Format the line as requested: 01. url \n   ╚ STATUS ICON
+                text += f"{index + 1:02d}. `{url}`\n   ╚ {status_text} {icon}\n\n"
+                
                 url_states[url] = 'online' if is_online else 'offline'
             
     await msg.edit_text(text)
