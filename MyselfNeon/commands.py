@@ -197,7 +197,7 @@ async def time_callback(client, callback_query):
     data = callback_query.data
     if data == "time_change":
         await callback_query.answer()
-        await callback_query.message.reply_text("📝 __Send new Interval in Seconds:__", reply_markup=ForceReply(selective=True))
+        await callback_query.message.reply_text("📝 **Send new interval in seconds:**", reply_markup=ForceReply(selective=True))
 
 @Client.on_message(filters.reply & filters.private)
 async def set_time_input(client, message):
