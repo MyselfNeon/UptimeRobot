@@ -49,7 +49,6 @@ async def start_command(client, message):
     await message.reply_text(text, reply_markup=buttons)
 
 # --- CALLBACK HANDLERS (Navigation) ---
-# Note: Callbacks also need auth check if you want to prevent clicking buttons
 @Client.on_callback_query(filters.regex("^cb_"))
 async def cb_handler(client, query):
     # Optional: Check auth on button clicks too
@@ -101,7 +100,7 @@ async def cb_handler(client, query):
         
         text = (
             f"__Hello **{user_name}**\n\n"
-            "__I am Latest Advanced **Keep-Alive Monitor Bot**__"
+            "__I am Latest Advanced **Keep-Alive Monitor Bot**__ "
             "__Coded by **@MyselfNeon**.__ "
             f"__I can **Trigger** and **Monitor**oBo'r Webservices every **{interval}** seconds.__\n\n"
             "**Commands:**\n"
@@ -178,8 +177,7 @@ async def stats_command(client, message):
                     status_text = f"OFFLINE ({code})" if isinstance(code, int) and code not in (429, 200) else "OFFLINE"
                     icon = "🔴"
                 
-                # Format the line as requested: 01. url \n   ╚ STATUS ICON
-                text += f"{index + 1:02d}. `{url}`\n   ╚ {status_text} {icon}\n\n"
+                text += f"**{index + 1:02d}.** __{url}__\n   ╚ **{status_text}** {icon}\n\n"
                 
                 url_states[url] = 'online' if is_online else 'offline'
             
