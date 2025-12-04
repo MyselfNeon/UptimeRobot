@@ -31,7 +31,7 @@ async def start_command(client, message):
     
     text = (
         f"__Hello **{user_name}**__\n\n"
-        "__I am Latest Advanced **Keep-Alive Monitor Bot**__"
+        "__I am Latest Advanced **Keep-Alive Monitor Bot**__ "
         "__Coded by **@MyselfNeon**.__ "
         f"__I can **Trigger** and **Monitor** Your Webservices every **{interval}** seconds.__\n\n"
         "**Commands:**\n"
