@@ -197,7 +197,7 @@ async def time_callback(client, callback_query):
     data = callback_query.data
     if data == "time_change":
         await callback_query.answer()
-        await callback_query.message.reply_text("📝 **__Send new Interval in Seconds:__**", reply_markup=ForceReply(selective=True))
+        await callback_query.message.reply_text("📝 **Send new interval in seconds:**", reply_markup=ForceReply(selective=True))
 
 @Client.on_message(filters.reply & filters.private)
 async def set_time_input(client, message):
@@ -209,6 +209,6 @@ async def set_time_input(client, message):
             new_time = int(message.text)
             if new_time < 10: return await message.reply_text("⚠️ Minimum is 10s.")
             await db.set_interval(new_time)
-            await message.reply_text(f"✅ **Interval set to {new_time}s** !")
+            await message.reply_text(f"✅ Interval set to **{new_time}s**!")
         except ValueError:
             await message.reply_text("⚠️ Invalid number.")
