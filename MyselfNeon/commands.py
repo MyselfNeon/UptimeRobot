@@ -30,15 +30,15 @@ async def start_command(client, message):
     user_name = message.from_user.first_name
     
     text = (
-        f"‣ Hᴇʟʟᴏ {user_name} 🇮🇳\n"
-        "I ᴀᴍ Lᴀᴛᴇsᴛ Aᴅᴠᴀɴᴄᴇᴅ **Keep-Alive Monitor Bᴏᴛ**.\n"
-        "Cᴏᴅᴇᴅ & Dᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ NᴇᴏɴAɴᴜʀᴀɢ.\n"
-        f"I ᴄᴀɴ **Trigger** ᴀɴᴅ **Monitor** Yᴏᴜʀ ᴡᴇʙsᴇʀᴠɪᴄᴇs ᴇᴠᴇʀʏ **{interval}** ѕᴇᴄᴏɴᴅs.\n\n"
+        f"__Hello **{user_name}**__\n\n"
+        "__I am Latest Advanced **Keep-Alive Monitor Bot**__"
+        "__Coded by **@MyselfNeon**.__"
+        f"__I can **Trigger** and **Monitor** Your Webservices every **{interval}** seconds.__\n\n"
         "**Commands:**\n"
-        "/add `url` - Monitor a new URL\n"
-        "/del `url` - Delete a URL\n"
-        "/check - Manual check status\n"
-        "/time - Set monitor interval"
+        "**/add url** - __Monitor a New URL__\n"
+        "**/del url** - __Delete an URL__\n"
+        "**/check** - __Manual check Status__\n"
+        "**/time** - __Set Monitor Interval__"
     )
     
     buttons = InlineKeyboardMarkup([
@@ -61,8 +61,8 @@ async def cb_handler(client, query):
     if data == "cb_all_bots":
         text = (
             "🤖 **My Other Bots**\n\n"
-            "Here are some of the other bots and projects I have worked on.\n"
-            "Check out the update channel for the latest news!"
+            "__Here are some of the other bots and projects I have worked on.__"
+            "__Check out the update channel for the latest news!__"
         )
         buttons = InlineKeyboardMarkup([
             [
@@ -100,15 +100,15 @@ async def cb_handler(client, query):
         user_name = query.from_user.first_name
         
         text = (
-            f"‣ Hᴇʟʟᴏ {user_name} 🇮🇳\n"
-            "I ᴀᴍ Lᴀᴛᴇsᴛ Aᴅᴠᴀɴᴄᴇᴅ **Keep-Alive Monitor Bᴏᴛ**.\n"
-            "Cᴏᴅᴇᴅ & Dᴇᴠᴇʟᴏᴘᴇᴅ ʙʏ NᴇᴏɴAɴᴜʀᴀɢ.\n"
-            f"I ᴄᴀɴ **Trigger** ᴀɴᴅ **Monitor** Yᴏᴜʀ ᴡᴇʙsᴇʀᴠɪᴄᴇs ᴇᴠᴇʀʏ **{interval}** ѕᴇᴄᴏɴᴅs.\n\n"
+            f"__Hello **{user_name}**\n\n"
+            "__I am Latest Advanced **Keep-Alive Monitor Bot**__"
+            "__Coded by **@MyselfNeon**.__"
+            f"__I can **Trigger** and **Monitor** Your Webservices every **{interval}** seconds.__\n\n"
             "**Commands:**\n"
-            "/add `url` - Monitor a new URL\n"
-            "/del `url` - Delete a URL\n"
-            "/check - Manual check status\n"
-            "/time - Set monitor interval"
+            "**/add url** - __Monitor a New URL__\n"
+            "**/del url** - __Delete an URL__\n"
+            "**/check** - __Manual check Status__\n"
+            "**/time** - __Set Monitor Interval__"
         )
         buttons = InlineKeyboardMarkup([
             [InlineKeyboardButton("🤖 Aʟʟ Bᴏᴛs", callback_data="cb_all_bots"),
