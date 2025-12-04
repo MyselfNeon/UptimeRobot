@@ -1,4 +1,4 @@
-secondsrogram import Client, filters
+from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
 from info import AUTH_USERS
 from database import db
