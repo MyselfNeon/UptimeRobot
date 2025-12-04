@@ -32,13 +32,13 @@ async def start_command(client, message):
     text = (
         f"__Hello **{user_name}**__\n\n"
         "__I am Latest Advanced **Keep-Alive Monitor Bot**__"
-        "__Coded by **@MyselfNeon**.__"
+        "__Coded by **@MyselfNeon**.__ "
         f"__I can **Trigger** and **Monitor** Your Webservices every **{interval}** seconds.__\n\n"
         "**Commands:**\n"
-        "**/add url** - __Monitor a New URL__\n"
-        "**/del url** - __Delete an URL__\n"
-        "**/check** - __Manual check Status__\n"
-        "**/time** - __Set Monitor Interval__"
+        "/add {url} - __Monitor a New URL__\n"
+        "/del {url} - __Delete an URL__\n"
+        "/check - __Manual check Status__\n"
+        "/time - __Set Monitor Interval__"
     )
     
     buttons = InlineKeyboardMarkup([
@@ -102,13 +102,13 @@ async def cb_handler(client, query):
         text = (
             f"__Hello **{user_name}**\n\n"
             "__I am Latest Advanced **Keep-Alive Monitor Bot**__"
-            "__Coded by **@MyselfNeon**.__"
+            "__Coded by **@MyselfNeon**.__ "
             f"__I can **Trigger** and **Monitor** Your Webservices every **{interval}** seconds.__\n\n"
             "**Commands:**\n"
-            "**/add url** - __Monitor a New URL__\n"
-            "**/del url** - __Delete an URL__\n"
-            "**/check** - __Manual check Status__\n"
-            "**/time** - __Set Monitor Interval__"
+            "/add {url} - __Monitor a New URL__\n"
+            "/del {url} - __Delete an URL__\n"
+            "/check - __Manual check Status__\n"
+            "/time - __Set Monitor Interval__"
         )
         buttons = InlineKeyboardMarkup([
             [InlineKeyboardButton("🤖 Aʟʟ Bᴏᴛs", callback_data="cb_all_bots"),
