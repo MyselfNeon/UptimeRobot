@@ -74,14 +74,14 @@ async def cb_handler(client, query):
         
     elif data == "cb_about_me":
         text = (
-            "• Mʏ Nᴀᴍᴇ : Auto Filter™\n"
-            "• Mʏ Bᴇsᴛ Fʀɪᴇɴᴅ : Tʜɪs Sᴡᴇᴇᴛɪᴇ ❤️\n" 
-            "• Dᴇᴠᴇʟᴏᴘᴇʀ : @MyselfNeon\n" 
-            "• Lɪʙʀᴀʀʏ : Pʏʀᴏɢʀᴀᴍ\n" 
-            "• Lᴀɴɢᴜᴀɢᴇ : Pʏᴛʜᴏɴ 𝟹\n" 
-            "• DᴀᴛᴀBᴀsᴇ : Mᴏɴɢᴏ DB\n" 
-            "• Bᴏᴛ Sᴇʀᴠᴇʀ : Hᴇʀᴏᴋᴜ\n" 
-            "• Bᴜɪʟᴅ Sᴛᴀᴛᴜs : ᴠ𝟸.𝟽.𝟷 [Sᴛᴀʙʟᴇ]"
+            "<b><i>• Mʏ Nᴀᴍᴇ : <a href='https://t.me/Uptime_oBot'>Uptime RoBot</a>\n"
+            "• Mʏ Bᴇsᴛ Fʀɪᴇɴᴅ : <a href='tg://settings'>Tʜɪs Sᴡᴇᴇᴛɪᴇ ❤️</a>\n"
+            "• Dᴇᴠᴇʟᴏᴘᴇʀ : <a href='https://t.me/MyselfNeon'>@MyselfNeon</a>\n"
+            "• Lɪʙʀᴀʀʏ : <a href='https://docs.pyrogram.org/'>Pʏʀᴏɢʀᴀᴍ</a>\n"
+            "• Lᴀɴɢᴜᴀɢᴇ : <a href='https://www.python.org/download/releases/3.0/'>Pʏᴛʜᴏɴ 𝟹</a>\n"
+            "• DᴀᴛᴀBᴀsᴇ : <a href='https://www.mongodb.com/'>Mᴏɴɢᴏ DB</a>\n"
+            "• Bᴏᴛ Sᴇʀᴠᴇʀ : <a href='https://heroku.com'>Hᴇʀᴏᴋᴜ</a>\n"
+            "• Bᴜɪʟᴅ Sᴛᴀᴛᴜs : ᴠ𝟸.0 [Sᴛᴀʙʟᴇ]</i></b>"
         )
         buttons = InlineKeyboardMarkup([
             [
@@ -103,7 +103,7 @@ async def cb_handler(client, query):
             f"__Hello **{user_name}**\n\n"
             "__I am Latest Advanced **Keep-Alive Monitor Bot**__"
             "__Coded by **@MyselfNeon**.__ "
-            f"__I can **Trigger** and **Monitor** Your Webservices every **{interval}** seconds.__\n\n"
+            f"__I can **Trigger** and **Monitor**oBo'r Webservices every **{interval}** seconds.__\n\n"
             "**Commands:**\n"
             "/add {url} - __Monitor a New URL__\n"
             "/del {url} - __Delete an URL__\n"
