@@ -177,7 +177,7 @@ async def stats_command(client, message):
                     status_text = f"OFFLINE ({code})" if isinstance(code, int) and code not in (429, 200) else "OFFLINE"
                     icon = "🔴"
                 
-                text += f"**{index + 1:02d}.** __{url}__\n   ╚ **{status_text}** {icon}\n\n"
+                text += f"**{index + 1:02d}.** **__{url}__**\n   ╚ **{status_text}** {icon}\n\n"
                 
                 url_states[url] = 'online' if is_online else 'offline'
             
