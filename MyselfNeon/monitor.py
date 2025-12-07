@@ -1,83 +1,92 @@
 import asyncio
 import aiohttp
 from pyrogram import Client
-from info import ADMIN
-from database import db
+# UPDATED IMPORT: Uses local db.py
+from .db import db
 
 # Dictionary to store the previous state of URLs
+# Format: {"user_id|url": "online/offline"}
 url_states = {}
 
 # --- MONITORING & KEEP-ALIVE LOGIC ---
-async def check_url(session, url, is_keep_alive=False):
+async def check_url(session, url):
     """
-    Checks the status of a URL.
+    Checks the status of a URL. Returns (is_online, status_code/error).
     """
-    # MIMIC A REAL BROWSER (Fixes 403 and 429 Errors)
     headers = {
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
         "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Accept-Language": "en-US,en;q=0.5",
-        "Connection": "keep-alive",
-        "Upgrade-Insecure-Requests": "1"
+        "Connection": "keep-alive"
     }
-
     try:
-        # Added headers=headers to the request
-        async with session.get(url, timeout=15, headers=headers) as response:
+        async with session.get(url, timeout=10, headers=headers) as response:
             if response.status == 200:
                 return True, response.status
             else:
                 return False, response.status
     except Exception as e:
-        return False, str(e)
+        return False, "Error"
 
 async def monitor_task(app: Client):
-    print("Started Keep-Alive and Monitoring Service...")
+    print("Started Premium Keep-Alive and Monitoring Service...")
     
-    # Initial DB fetch for startup message
-    interval = await db.get_interval()
-    
-    try:
-        await app.send_message(ADMIN, f"🤖 **Keep-Alive Monitor Started**\nTriggering services every **{interval} seconds**.")
-    except Exception as e:
-        print(f"Failed to send startup message: {e}")
-
     async with aiohttp.ClientSession() as session:
         while True:
-            # 1. Fetch current configuration dynamically from DB
-            urls = await db.get_urls()
+            # 1. Fetch ALL monitored URLs from all users
+            all_entries = await db.get_all_monitored_datas()
             interval = await db.get_interval()
 
-            # 2. Loop through URLs
-            for url in urls:
-                is_online, status = await check_url(session, url, is_keep_alive=True)
-                
-                prev_state = url_states.get(url)
+            for entry in all_entries:
+                user_id = entry.get("user_id")
+                url = entry.get("url")
+                unique_key = f"{user_id}|{url}"
+
+                # --- CHECK 1: Initial Check ---
+                is_online, status = await check_url(session, url)
+
+                # --- RETRY LOGIC (Double/Triple Check) ---
+                if not is_online:
+                    # Retry 2 times with 10s delay
+                    for attempt in range(2):
+                        await asyncio.sleep(10) # Immediate short wait
+                        is_online, status = await check_url(session, url)
+                        if is_online:
+                            break 
+
+                prev_state = url_states.get(unique_key)
 
                 if is_online:
+                    # Recovery Alert
                     if prev_state == 'offline':
-                        await app.send_message(
-                            ADMIN,
-                            f"✅ **Service Recovered!**\n\n"
-                            f"🔗 **URL:** `{url}`\n"
-                            f"🟢 **Status:** Back Online ({status})\n"
-                            f"⚡ **Action:** Keep-Alive successful."
-                        )
-                    url_states[url] = 'online'
-                else:
-                    # Logic to handle specific 429 blocking silently if preferred
-                    if status == 429:
-                        print(f"Rate Limit (429) hit for {url}. The site is likely UP but blocking bots.")
+                        try:
+                            await app.send_message(
+                                user_id,
+                                f"🟢 **__Service Recovered!__**\n\n"
+                                f"🔗 **__URL:__** `{url}`\n"
+                                f"⚡ **__Status:__** **Online** (200 OK)\n"
+                                f"🥂 **__Note:__** __Your service is back in action.__"
+                            )
+                        except Exception as e:
+                            print(f"Failed to send alert to {user_id}: {e}")
                     
+                    url_states[unique_key] = 'online'
+                
+                else:
+                    # Down Alert
                     if prev_state != 'offline':
-                        await app.send_message(
-                            ADMIN,
-                            f"❌ **Service is DOWN**\n\n"
-                            f"🔗 **URL:** `{url}`\n"
-                            f"⚠️ **Error:** `{status}`\n"
-                            f"🛠 **Action:** Keep-Alive request failed."
-                        )
-                        url_states[url] = 'offline'
+                        try:
+                            await app.send_message(
+                                user_id,
+                                f"🔴 **__Service is DOWN!__**\n\n"
+                                f"🔗 **__URL:__** `{url}`\n"
+                                f"⚠️ **__Error:__** `{status}`\n"
+                                f"🔄 **__Tries:__** __Failed after 3 attempts.__\n"
+                                f"🛠 **__Action:__** __Please check your server manually.__"
+                            )
+                        except Exception as e:
+                            print(f"Failed to send alert to {user_id}: {e}")
+                        
+                        url_states[unique_key] = 'offline'
             
-            # 3. Sleep for the dynamic interval
+            # Sleep for the global interval
             await asyncio.sleep(interval)
