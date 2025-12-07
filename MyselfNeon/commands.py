@@ -161,12 +161,12 @@ async def time_callbacks(client, query):
         await query.answer()
         # Force Reply to ask for input
         await query.message.reply_text(
-            "⏳ **__Send New Interval in Seconds.__**\n"
-            "__– (Example: 60 for 1 minute)__",
+            "⏳ **__Send the new interval time in seconds.__**\n"
+            "__(Example: 60 for 1 minute)__",
             reply_markup=ForceReply(selective=True)
         )
 
-# --- Handle Time Input ---
+# --- HANDLE TIME INPUT ---
 @Client.on_message(filters.reply & filters.private)
 async def set_time_input(client, message):
     # Check if the reply is to our Time prompt
@@ -174,9 +174,9 @@ async def set_time_input(client, message):
         try:
             new_time = int(message.text)
             if new_time < 10: 
-                return await message.reply_text("⚠️ **__Too Fast !! \n\nMinimum Interval is 10 Seconds.__**")
+                return await message.reply_text("⚠️ **__Too Fast! Minimum interval is 10 seconds.__**")
             
             await db.set_interval(new_time)
-            await message.reply_text(f"✅ **__Success !! \n\n⏰ Monitoring Interval set to {new_time}s.__**")
+            await message.reply_text(f"✅ **__Success! Monitoring interval set to {new_time}s.__**")
         except ValueError:
-            await message.reply_text("⚠️ **__Invalid Input. Please send a number.__**")
+            await message.reply_text("⚠️ **__Invalid input. Please send a number.__**")
