@@ -3,6 +3,7 @@ import os
 import asyncio
 from pyrogram import idle
 from app import app, start_web_server
+from info import ADMIN 
 
 # Explicitly add current directory to python path
 sys.path.append(os.getcwd())
@@ -17,8 +18,19 @@ async def start_bot():
     
     # 2. Start Telegram Client
     await app.start()
-    print("Telegram Client Started.")
     
+    # --- SEND RESTART NOTIFICATION ---
+    try:
+        await app.send_message(
+            ADMIN,
+            "🎉 **__Bot Successfully Restarted!__**\n\n"
+            "✅ **__System is back Online.__**\n"
+            "⚡ **__All Monitoring Services have been Resumed.__**"
+        )
+    except Exception as e:
+        print(f"⚠️ Failed to send restart message: {e}")
+    # ---------------------------------
+
     # 3. Start Background Task
     asyncio.create_task(monitor_task(app))
     
