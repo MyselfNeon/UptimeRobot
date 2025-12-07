@@ -1,6 +1,5 @@
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
-# UPDATED IMPORT: Uses local db.py
 from .db import db
 from MyselfNeon.monitor import check_url
 import aiohttp
@@ -10,19 +9,22 @@ import aiohttp
 async def start_command(client, message):
     user_name = message.from_user.first_name
     
+    # Premium Welcome Message
     text = (
-        f"👋 **__Hello {user_name}!__**\n\n"
-        "🤖 **__I am your Premium Keep-Alive Monitor.__**\n"
-        "✨ **__I will keep your projects active 24/7 with zero downtime.__**\n\n"
-        "🛠 **__My Commands:__**\n"
-        "🔸 `/add` __<url>__ - **__Add a URL to Monitor__**\n"
-        "🔸 `/del` __<url>__ - **__Remove a URL__**\n"
-        "🔸 `/check` - **__View Your Dashboard__**\n"
+        f"👋 **__Hello {user_name},__**\n\n"
+        "🤖 **__Welcome to your Premium Uptime Monitor.__**\n"
+        "🛡 **__I am here to protect your websites from going to sleep.__**\n\n"
+        "✨ **__What I do:__**\n"
+        "__I monitor your URLs 24/7 and alert you instantly if they go down.__\n\n"
+        "🛠 **__Control Menu:__**\n"
+        "🔸 `/add <url>`  – **__Start Monitoring a URL__**\n"
+        "🔸 `/del <url>`  – **__Stop Monitoring a URL__**\n"
+        "🔸 `/check`        – **__Live Status Dashboard__**\n"
+        "🔸 `/time`         – **__Set Monitor Interval__**"
     )
     
+    # Removed the confusing Add/Del buttons. Kept Support/Updates for a clean look.
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("➕ Aᴅᴅ Uʀʟ", switch_inline_query_current_chat="/add "),
-         InlineKeyboardButton("🗑 Dᴇʟ Uʀʟ", switch_inline_query_current_chat="/del ")],
         [InlineKeyboardButton("🆘 Sᴜᴘᴘᴏʀᴛ", url="https://t.me/MyselfNeon"),
          InlineKeyboardButton("📢 Uᴘᴅᴀᴛᴇs", url="https://t.me/NeonFiles")]
     ])
@@ -66,81 +68,108 @@ async def delete_url_command(client, message):
     await db.remove_url(user_id, url)
     await message.reply_text(f"🗑 **__Deleted Successfully!__**\n\n🔗 **__URL:__** `{url}` has been removed.")
 
-# --- STATS / CHECK COMMAND ---
+# --- CHECK / DASHBOARD COMMAND ---
 @Client.on_message(filters.command(["check", "stats", "list"]) & filters.private)
 async def stats_command(client, message):
     user_id = message.from_user.id
     
-    # Send waiting message
-    wait_msg = await message.reply_text("🔄 **__Fetching your Dashboard... Please wait.__**")
+    wait_msg = await message.reply_text("🔄 **__Connecting to Dashboard...__**")
     
     urls = await db.get_urls(user_id)
-    
     if not urls:
-        return await wait_msg.edit_text(
-            "📂 **__Your List is Empty!__**\n\n__Use__ `/add` __to start monitoring your projects.__"
-        )
+        return await wait_msg.edit_text("📂 **__Your List is Empty!__**\n__Use__ `/add` __to add a website.__")
     
     text = f"📊 **__Your Monitoring Dashboard__**\n__User: {message.from_user.first_name}__\n\n"
     
     async with aiohttp.ClientSession() as session:
         for index, url in enumerate(urls):
             is_online, code = await check_url(session, url)
+            status_icon = "🟢" if is_online else "🔴"
+            status_text = "Online" if is_online else f"Offline ({code})"
             
-            if is_online:
-                status_icon = "🟢"
-                status_text = "Online"
-            else:
-                status_icon = "🔴"
-                status_text = f"Offline ({code})"
-            
-            text += (
-                f"**{index + 1}.** `{url}`\n"
-                f"   ╚ **Status:** {status_text} {status_icon}\n\n"
-            )
+            text += f"**{index + 1}.** `{url}`\n   ╚ **Status:** {status_text} {status_icon}\n\n"
     
-    # Add Refresh Button
+    # New Single "Ping All" Button
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔄 Rᴇғʀᴇsʜ Sᴛᴀᴛᴜs", callback_data="refresh_stats")],
-        [InlineKeyboardButton("✖️ Cʟᴏsᴇ", callback_data="close_msg")]
+        [InlineKeyboardButton("🔔 Pɪɴɢ Aʟʟ Uʀʟs", callback_data="ping_all")]
     ])
     
     await wait_msg.edit_text(text, reply_markup=buttons, disable_web_page_preview=True)
 
-# --- CALLBACK HANDLERS (Refresh & Close) ---
-@Client.on_callback_query(filters.regex("refresh_stats"))
-async def refresh_stats(client, query):
+# --- PING ALL CALLBACK ---
+@Client.on_callback_query(filters.regex("ping_all"))
+async def ping_all_callback(client, query):
     user_id = query.from_user.id
-    await query.answer("🔄 Refreshing...", show_alert=False)
+    await query.answer("⚡ Pinging all your URLs...", show_alert=False)
     
     urls = await db.get_urls(user_id)
     if not urls:
-        return await query.message.edit_text("📂 **__Your List is Empty!__**")
+        return await query.message.edit_text("📂 **__No URLs to ping.__**")
 
-    text = f"📊 **__Your Monitoring Dashboard__**\n__User: {query.from_user.first_name}__\n\n"
+    # Re-check all URLs manually
+    text = f"📊 **__Manual Ping Results__**\n__User: {query.from_user.first_name}__\n\n"
     
     async with aiohttp.ClientSession() as session:
         for index, url in enumerate(urls):
             is_online, code = await check_url(session, url)
-            if is_online:
-                status_icon = "🟢"
-                status_text = "Online"
-            else:
-                status_icon = "🔴"
-                status_text = f"Offline ({code})"
+            status_icon = "🟢" if is_online else "🔴"
+            status_text = "Online" if is_online else f"Offline ({code})"
             
             text += f"**{index + 1}.** `{url}`\n   ╚ **Status:** {status_text} {status_icon}\n\n"
-            
+
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔄 Rᴇғʀᴇsʜ Sᴛᴀᴛᴜs", callback_data="refresh_stats")],
-        [InlineKeyboardButton("✖️ Cʟᴏsᴇ", callback_data="close_msg")]
+        [InlineKeyboardButton("🔔 Pɪɴɢ Aʟʟ Uʀʟs", callback_data="ping_all")]
     ])
     
-    try:
-        await query.message.edit_text(text, reply_markup=buttons, disable_web_page_preview=True)
-    except:
-        pass
+    await query.message.edit_text(text, reply_markup=buttons, disable_web_page_preview=True)
 
-@Client.on_callback_query(filters.regex("close_msg"))
-async def close_msg(client, query):
-    await query.message.delete()
+
+# --- TIME COMMAND (RESTORED) ---
+@Client.on_message(filters.command("time") & filters.private)
+async def time_command(client, message):
+    # Fetch current global interval
+    current_time = await db.get_interval()
+    
+    text = (
+        f"⏱ **__Monitor Interval Settings__**\n\n"
+        f"__Current Check Interval:__ **{current_time} seconds**\n"
+        f"__Status:__ **Active**"
+    )
+    
+    buttons = InlineKeyboardMarkup([
+        [InlineKeyboardButton("📝 Cʜᴀɴɢᴇ", callback_data="time_change"),
+         InlineKeyboardButton("✖️ Cʟᴏsᴇ", callback_data="time_close")]
+    ])
+    
+    await message.reply_text(text, reply_markup=buttons)
+
+@Client.on_callback_query(filters.regex("^time_"))
+async def time_callbacks(client, query):
+    data = query.data
+    
+    if data == "time_close":
+        await query.message.delete()
+        
+    elif data == "time_change":
+        await query.answer()
+        # Force Reply to ask for input
+        await query.message.reply_text(
+            "⏳ **__Send the new interval time in seconds.__**\n"
+            "__(Example: 60 for 1 minute)__",
+            reply_markup=ForceReply(selective=True)
+        )
+
+# --- HANDLE TIME INPUT ---
+@Client.on_message(filters.reply & filters.private)
+async def set_time_input(client, message):
+    # Check if the reply is to our Time prompt
+    if message.reply_to_message and message.reply_to_message.text and "Send the new interval" in message.reply_to_message.text:
+        try:
+            new_time = int(message.text)
+            if new_time < 10: 
+                return await message.reply_text("⚠️ **__Too Fast! Minimum interval is 10 seconds.__**")
+            
+            await db.set_interval(new_time)
+            await message.reply_text(f"✅ **__Success! Monitoring interval set to {new_time}s.__**")
+        except ValueError:
+            await message.reply_text("⚠️ **__Invalid input. Please send a number.__**")
