@@ -1,3 +1,10 @@
+# ---------------------------------------------------
+# File Name: Database.py
+# Author: MyselfNeon
+# GitHub: https://github.com/MyselfNeon/
+# Telegram: https://t.me/MyelfNeon
+# ---------------------------------------------------
+
 import motor.motor_asyncio
 from info import DB_URI, DB_NAME
 
