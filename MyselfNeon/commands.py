@@ -4,7 +4,7 @@ from .db import db
 from MyselfNeon.monitor import check_url
 import aiohttp
 
-# --- START COMMAND ---
+# --- Start Command ---
 @Client.on_message(filters.command("start") & filters.private)
 async def start_command(client, message):
     user_name = message.from_user.first_name
@@ -12,15 +12,15 @@ async def start_command(client, message):
     # Premium Welcome Message
     text = (
         f"👋 **__Hello {user_name},__**\n\n"
-        "🤖 **__Welcome to your Premium Uptime Monitor.__**\n"
-        "🛡 **__I am here to protect your websites from going to sleep.__**\n\n"
-        "✨ **__What I do:__**\n"
-        "__I monitor your URLs 24/7 and alert you instantly if they go down.__\n\n"
-        "🛠 **__Control Menu:__**\n"
-        "🔸 `/add <url>`  – **__Start Monitoring a URL__**\n"
-        "🔸 `/del <url>`  – **__Stop Monitoring a URL__**\n"
-        "🔸 `/check`        – **__Live Status Dashboard__**\n"
-        "🔸 `/time`         – **__Set Monitor Interval__**"
+        "🎉 **__Welcome to your Premium Uptime Monitor Bot. __**\n"
+        "**__I am here to Protect your Web Urls from going to Sleep.__**\n\n"
+        "⁉️ **__Features I Provide :__**\n"
+        "– __I monitor your URLs 24/7 and Alert you Instantly if they go Down.__\n\n"
+        "🛠 **__Control Menu :__**\n"
+        "– **__Start Monitoring an URL** (/add Url)__\n"
+        "– **__Stop Monitoring an URL** (/del Url)__\n"
+        "– **__Live Status Dashboard** (/check)__\n"
+        "– **__Set Monitor Interval** (/time)__"
     )
     
     # Removed the confusing Add/Del buttons. Kept Support/Updates for a clean look.
@@ -31,7 +31,7 @@ async def start_command(client, message):
     
     await message.reply_text(text, reply_markup=buttons)
 
-# --- ADD URL COMMAND ---
+# --- Add Url Command ---
 @Client.on_message(filters.command("add") & filters.private)
 async def add_url_command(client, message):
     user_id = message.from_user.id
@@ -48,12 +48,12 @@ async def add_url_command(client, message):
     
     await db.add_url(user_id, url)
     await message.reply_text(
-        f"✅ **__Successfully Added!__**\n\n"
+        f"✅ **__Successfully Added !!__**\n\n"
         f"🔗 **__URL:__** `{url}`\n"
         f"🚀 **__Status:__** __Monitoring Started...__"
     )
 
-# --- DELETE URL COMMAND ---
+# --- Delete Url Command ---
 @Client.on_message(filters.command("del") & filters.private)
 async def delete_url_command(client, message):
     user_id = message.from_user.id
@@ -66,9 +66,9 @@ async def delete_url_command(client, message):
         return await message.reply_text("🤷‍♂️ **__Not Found!__**\n__You are not monitoring this URL.__")
     
     await db.remove_url(user_id, url)
-    await message.reply_text(f"🗑 **__Deleted Successfully!__**\n\n🔗 **__URL:__** `{url}` has been removed.")
+    await message.reply_text(f"🛃 **__Deleted Successfully!__**\n\n🔗 **__URL:__** `{url}` has been removed.")
 
-# --- CHECK / DASHBOARD COMMAND ---
+# --- Check / Dashboard Command ---
 @Client.on_message(filters.command(["check", "stats", "list"]) & filters.private)
 async def stats_command(client, message):
     user_id = message.from_user.id
@@ -96,7 +96,7 @@ async def stats_command(client, message):
     
     await wait_msg.edit_text(text, reply_markup=buttons, disable_web_page_preview=True)
 
-# --- PING ALL CALLBACK ---
+# --- Ping All Callback ---
 @Client.on_callback_query(filters.regex("ping_all"))
 async def ping_all_callback(client, query):
     user_id = query.from_user.id
@@ -124,7 +124,7 @@ async def ping_all_callback(client, query):
     await query.message.edit_text(text, reply_markup=buttons, disable_web_page_preview=True)
 
 
-# --- TIME COMMAND ---
+# --- Time Command ---
 @Client.on_message(filters.command("time") & filters.private)
 async def time_command(client, message):
     # Fetch current global interval
