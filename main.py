@@ -33,7 +33,7 @@ async def start_bot():
                 OWNER_ID,
                 "🎉 **__Bot Successfully Restarted !!__**\n\n"
                 "✅ **__Systems are back Online.__**\n"
-                "⚡ **__All Monitorings are now Resumed.__**"
+                "✅ **__All Monitorings are now Resumed.__**"
             )
             print("✅ Startup message sent.")
         except Exception as e:
