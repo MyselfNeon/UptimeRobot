@@ -1,3 +1,10 @@
+# ---------------------------------------------------
+# File Name: Main.py
+# Author: MyselfNeon
+# GitHub: https://github.com/MyselfNeon/
+# Telegram: https://t.me/MyelfNeon
+# ---------------------------------------------------
+
 import sys
 import os
 import asyncio
@@ -24,9 +31,9 @@ async def start_bot():
         try:
             await app.send_message(
                 OWNER_ID,
-                "🎉 **__Bot Successfully Restarted!__**\n\n"
-                "✅ **__System is back Online.__**\n"
-                "⚡ **__All Monitoring Services have been Resumed.__**"
+                "🎉 **__Bot Successfully Restarted !!__**\n\n"
+                "✅ **__Systems are back Online.__**\n"
+                "⚡ **__All Monitorings are now Resumed.__**"
             )
             print("✅ Startup message sent.")
         except Exception as e:
