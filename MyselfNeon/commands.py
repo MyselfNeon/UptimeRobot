@@ -124,7 +124,7 @@ async def ping_all_callback(client, query):
     await query.message.edit_text(text, reply_markup=buttons, disable_web_page_preview=True)
 
 
-# --- TIME COMMAND (RESTORED) ---
+# --- TIME COMMAND ---
 @Client.on_message(filters.command("time") & filters.private)
 async def time_command(client, message):
     # Fetch current global interval
@@ -132,13 +132,13 @@ async def time_command(client, message):
     
     text = (
         f"⏱ **__Monitor Interval Settings__**\n\n"
-        f"__Current Check Interval:__ **{current_time} seconds**\n"
-        f"__Status:__ **Active**"
+        f"**__Current Set Interval:__ {current_time} Seconds**\n"
+        f"**__Status:__ Active**"
     )
     
     buttons = InlineKeyboardMarkup([
         [InlineKeyboardButton("📝 Cʜᴀɴɢᴇ", callback_data="time_change"),
-         InlineKeyboardButton("✖️ Cʟᴏsᴇ", callback_data="time_close")]
+         InlineKeyboardButton("❌ Cʟᴏsᴇ", callback_data="time_close")]
     ])
     
     await message.reply_text(text, reply_markup=buttons)
@@ -154,12 +154,12 @@ async def time_callbacks(client, query):
         await query.answer()
         # Force Reply to ask for input
         await query.message.reply_text(
-            "⏳ **__Send the new interval time in seconds.__**\n"
-            "__(Example: 60 for 1 minute)__",
+            "⏳ **__Send New Interval in Seconds.__**\n"
+            "__– (Example: 60 for 1 minute)__",
             reply_markup=ForceReply(selective=True)
         )
 
-# --- HANDLE TIME INPUT ---
+# --- Handle Time Input ---
 @Client.on_message(filters.reply & filters.private)
 async def set_time_input(client, message):
     # Check if the reply is to our Time prompt
@@ -167,9 +167,9 @@ async def set_time_input(client, message):
         try:
             new_time = int(message.text)
             if new_time < 10: 
-                return await message.reply_text("⚠️ **__Too Fast! Minimum interval is 10 seconds.__**")
+                return await message.reply_text("⚠️ **__Too Fast !! \n\nMinimum Interval is 10 Seconds.__**")
             
             await db.set_interval(new_time)
-            await message.reply_text(f"✅ **__Success! Monitoring interval set to {new_time}s.__**")
+            await message.reply_text(f"✅ **__Success !! \n\n⏰ Monitoring Interval set to {new_time}s.__**")
         except ValueError:
-            await message.reply_text("⚠️ **__Invalid input. Please send a number.__**")
+            await message.reply_text("⚠️ **__Invalid Input. Please send a number.__**")
