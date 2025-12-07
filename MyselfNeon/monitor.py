@@ -1,14 +1,19 @@
+# ---------------------------------------------------
+# File Name: Monitor.py
+# Author: MyselfNeon
+# GitHub: https://github.com/MyselfNeon/
+# Telegram: https://t.me/MyelfNeon
+# ---------------------------------------------------
+
 import asyncio
 import aiohttp
 from pyrogram import Client
-# UPDATED IMPORT: Uses local db.py
 from .db import db
 
-# Dictionary to store the previous state of URLs
 # Format: {"user_id|url": "online/offline"}
 url_states = {}
 
-# --- MONITORING & KEEP-ALIVE LOGIC ---
+# --- Monitoring & Keep-alive Logic ---
 async def check_url(session, url):
     """
     Checks the status of a URL. Returns (is_online, status_code/error).
@@ -64,7 +69,7 @@ async def monitor_task(app: Client):
                                 f"🟢 **__Service Recovered!__**\n\n"
                                 f"🔗 **__URL:__** `{url}`\n"
                                 f"⚡ **__Status:__** **Online** (200 OK)\n"
-                                f"🥂 **__Note:__** __Your service is back in action.__"
+                                f"🥂 **__Note:__** __Your Service is back in Action.__"
                             )
                         except Exception as e:
                             print(f"Failed to send alert to {user_id}: {e}")
@@ -81,7 +86,7 @@ async def monitor_task(app: Client):
                                 f"🔗 **__URL:__** `{url}`\n"
                                 f"⚠️ **__Error:__** `{status}`\n"
                                 f"🔄 **__Tries:__** __Failed after 3 attempts.__\n"
-                                f"🛠 **__Action:__** __Please check your server manually.__"
+                                f"🛠 **__Action:__** __Please Check your Server Manually.__"
                             )
                         except Exception as e:
                             print(f"Failed to send alert to {user_id}: {e}")
