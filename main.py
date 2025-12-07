@@ -7,17 +7,17 @@ from app import app, start_web_server
 # Explicitly add current directory to python path
 sys.path.append(os.getcwd())
 
-# CHANGED: Imported directly from MyselfNeon.monitor (removed .plugins)
 from MyselfNeon.monitor import monitor_task
 
 async def start_bot():
     print("Starting Bot...")
     
-    # 1. Start Web Server (Fixes Port Scanning)
+    # 1. Start Web Server
     await start_web_server()
     
     # 2. Start Telegram Client
     await app.start()
+    print("Telegram Client Started.")
     
     # 3. Start Background Task
     asyncio.create_task(monitor_task(app))
