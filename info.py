@@ -1,3 +1,10 @@
+# ---------------------------------------------------
+# File Name: Info.py
+# Author: MyselfNeon
+# GitHub: https://github.com/MyselfNeon/
+# Telegram: https://t.me/MyelfNeon
+# ---------------------------------------------------
+
 import os
 
 # Get these from https://my.telegram.org
