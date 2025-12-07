@@ -1,3 +1,10 @@
+# ---------------------------------------------------
+# File Name: App.py
+# Author: MyselfNeon
+# GitHub: https://github.com/MyselfNeon/
+# Telegram: https://t.me/MyelfNeon
+# ---------------------------------------------------
+
 from pyrogram import Client
 from aiohttp import web
 from info import API_ID, API_HASH, BOT_TOKEN, PORT
