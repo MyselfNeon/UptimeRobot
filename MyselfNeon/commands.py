@@ -1,3 +1,10 @@
+# ---------------------------------------------------
+# File Name: Commands.py
+# Author: MyselfNeon
+# GitHub: https://github.com/MyselfNeon/
+# Telegram: https://t.me/MyelfNeon
+# ---------------------------------------------------
+
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
 from .db import db
@@ -11,8 +18,8 @@ async def start_command(client, message):
     
     # Premium Welcome Message
     text = (
-        f"👋 **__Hello {user_name},__**\n\n"
-        "🎉 **__Welcome to your Premium Uptime Monitor Bot. __**\n"
+        f"👋 **__Hello {user_name}__**\n\n"
+        "🎉 **__Welcome to your Premium Uptime Monitor Bot. __**"
         "**__I am here to Protect your Web Urls from going to Sleep.__**\n\n"
         "⁉️ **__Features I Provide :__**\n"
         "– __I monitor your URLs 24/7 and Alert you Instantly if they go Down.__\n\n"
