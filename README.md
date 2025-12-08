@@ -1,23 +1,23 @@
-# ⚡ Premium Uptime Monitor Bot
+### ⚡ *Premium Uptime Monitor Bot*
 
-A powerful, asynchronous Telegram bot written in **Python (Pyrogram)** to monitor the uptime of your websites. It checks your URLs in real-time and sends instant notifications if a service goes down or recovers.
+*A powerful, asynchronous Telegram bot written in **Python (Pyrogram)** to monitor the uptime of your websites. It checks your URLs in real-time and sends instant notifications if a service goes down or recovers.*
 
-## 🚀 Features
+### 🚀 *Features*
 
-* **Real-Time Monitoring**: Checks websites 24/7.
-* **Instant Alerts**: Get notified via Telegram immediately when a site goes Offline or comes back Online.
-* **Smart Retry Logic**: Prevents false alarms by double-checking (3 attempts) before declaring a site down.
-* **Multi-User Support**: Users can manage their own list of URLs.
-* **Custom Intervals**: Admin can change the monitoring speed globally via the `/time` command.
-* **Dashboard**: View live status of all your monitored links with HTTP response codes.
-* **Web Server**: Built-in `aiohttp` web server to keep the bot alive on cloud platforms (Render, Railway, Heroku).
-* **Database**: Persistent storage using MongoDB.
+* ***Real-Time Monitoring**: Checks websites 24/7.*
+* ***Instant Alerts**: Get notified via Telegram immediately when a site goes Offline or comes back Online.*
+* ***Smart Retry Logic**: Prevents false alarms by double-checking (3 attempts) before declaring a site down.*
+* ***Multi-User Support**: Users can manage their own list of URLs.*
+* ***Custom Intervals**: Admin can change the monitoring speed globally via the `/time` command.*
+* ***Dashboard**: View live status of all your monitored links with HTTP response codes.*
+* ***Web Server**: Built-in `aiohttp` web server to keep the bot alive on cloud platforms (Render, Railway, Heroku).*
+* ***Database**: Persistent storage using MongoDB.*
 
 ---
 
-## 🛠 Config Vars
+### 🛠 *Config Vars*
 
-To run this bot, you need to set up the following environment variables.
+*To run this bot, you need to set up the following environment variables.*
 
 | Variable | Description | Required |
 | :--- | :--- | :--- |
@@ -31,7 +31,7 @@ To run this bot, you need to set up the following environment variables.
 
 ---
 
-## 🤖 Bot Commands
+### 🤖 Bot Commands
 
 | Command | Description |
 | :--- | :--- |
