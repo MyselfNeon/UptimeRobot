@@ -1,6 +1,6 @@
 ### *Premium Uptime Monitor Bot*
 
-***A powerful, asynchronous Telegram bot written in Python (Pyrogram) to monitor the uptime of your websites. It checks your URLs in real-time and sends instant notifications if a service goes down or recovers.***
+***A powerful asynchronous Telegram bot written in Python (Pyrogram) to monitor the uptime of your websites. It checks your URLs in real-time and sends instant notifications if a service goes down or recovers.***
 
 ### 🚀 *Features*
 
