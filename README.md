@@ -107,6 +107,44 @@ docker restart fsb
 
 </details>
 
+#### *Bot Commands ➠* 
+
+<details><summary><b><i>Bot Commands</i></b></summary>
+  
+```
+start - Check if Bot is Alive
+help - Get Help Message
+about - Check About the Bot
+files - Get All Files List of User
+del - Delete Files from DB with File ID [ADMIN]
+ban - Ban any Channel or User from using Bot [ADMIN]
+unban - Unban any Channel or User from using Bot [ADMIN]
+status - To Get Bot Status and Total Users [ADMIN]
+broadcast - To Broadcast any Message to all Users of Bot [ADMIN]
+```
+<b><i>⪼ Copy all Commands and paste it in <a href='https://t.me/botfather'>BotFather</a> to apply Commands.
+
+</details>
+
+#### *Channel Support ➠*
+
+***The Bot also Supports Telegram Channels, Just add it as an Admin. Whenever a new File is posted in the Channel, the Bot will Automatically edit the Message and add a “Get Download Link” Button.***
+
+#### Contact Developer 👨‍💻
+
+[![Contact Developer](https://img.shields.io/badge/Contact-Developer-blue?logo=telegram)](https://t.me/MyselfNeon)    
+[![Telegram Channel](https://img.shields.io/badge/Telegram-Main%20Channel-blue?logo=telegram)](https://t.me/neonfiles)  
+Join My <a href='https://t.me/neonfiles'>Update Channel</a> For More Update Regarding Repo.
+
+</details>
+
+#### *Thanks To ➠* ❤️
+ - <b>Thanks To [Neon An](https://t.me/MyselfNeon) To Modify And Add Amazing Features
+ - Thanks To Everyone who have Contributed In This Repo ❤️</b>
+
+---
+<h4 align="center">➠ © <a href="https://myselfneon.github.io/neon/" target="_blank" rel="noopener noreferrer">MyselfNeon 🍟</a></h4>
+
 ## 📂 Project Structure
 
 ```text
