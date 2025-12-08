@@ -1,4 +1,4 @@
-### ⚡ *Premium Uptime Monitor Bot*
+### *Premium Uptime Monitor Bot*
 
 *A powerful, asynchronous Telegram bot written in **Python (Pyrogram)** to monitor the uptime of your websites. It checks your URLs in real-time and sends instant notifications if a service goes down or recovers.*
 
@@ -143,9 +143,8 @@ Join My <a href='https://t.me/neonfiles'>Update Channel</a> For More Update Rega
  - Thanks To Everyone who have Contributed In This Repo ❤️</b>
 
 ---
-<h4 align="center">➠ © <a href="https://myselfneon.github.io/neon/" target="_blank" rel="noopener noreferrer">MyselfNeon 🍟</a></h4>
 
-## 📂 Project Structure
+#### 📂 Project Structure
 
 ```text
 Uptimer-Bot-neon/
@@ -160,3 +159,7 @@ Uptimer-Bot-neon/
 ├── main.py            # Entry Point
 ├── Dockerfile         # Docker Config
 └── requirements.txt   # Dependencies
+```
+---
+
+<h4 align="center">➠ © <a href="https://myselfneon.github.io/neon/" target="_blank" rel="noopener noreferrer">MyselfNeon 🍟</a></h4>
