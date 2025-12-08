@@ -44,7 +44,7 @@ async def add_url_command(client, message):
     user_id = message.from_user.id
 
     if len(message.command) < 2:
-        return await message.reply_text("⚠️ **__Usage Error:__**\n\n__Please use:__ `/add https://your-site.com`")
+        return await message.reply_text("⚠️ **__Usage Error:__**\n\n**__Please use:__** `/add https://your-site.com`")
     
     url = message.command[1]
     if not url.startswith("http"):
@@ -66,7 +66,7 @@ async def delete_url_command(client, message):
     user_id = message.from_user.id
 
     if len(message.command) < 2:
-        return await message.reply_text("⚠️ **__Usage Error:__**\n\n__Please use:__ `/del https://your-site.com`")
+        return await message.reply_text("⚠️ **__Usage Error:__**\n\n**__Please use:__** `/del https://your-site.com`")
     
     url = message.command[1]
     if not await db.is_url_exist(user_id, url):
