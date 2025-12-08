@@ -23,7 +23,7 @@
   <summary><code>API_ID</code> <small>(Required)</small></summary>
   <br>
   <b>Description:</b> Your Telegram API ID.<br>
-  <b>How to get:</b> Log in to <a href="https://my.telegram.org">my.telegram.org</a>.
+  <b>How to get:</b> Log in to <a href="https://my.m.org">my.telegram.org</a>.
 </details>
 
 <details>
@@ -72,42 +72,20 @@
 
 ### 🤖 Bot Commands
 
-*Click on a command to see its usage.*
-
 <details>
-  <summary><code>/start</code></summary>
+  <summary><b>Click to view all commands</b></summary>
   <br>
-  <b>Usage:</b> <code>/start</code><br>
-  <b>Description:</b> Check if the bot is alive and receive the welcome menu.
+
+| Command | Description |
+| :--- | :--- |
+| `/start` | Check if the bot is alive and receive the welcome menu. |
+| `/add` | Adds a new URL to your monitoring list. |
+| `/del` | Stops monitoring the specified URL and removes it from the database. |
+| `/check` | Displays a live dashboard with the status (Online/Offline) of all your URLs. |
+| `/time` | **(Admin Only)** View or change the global monitoring interval (in seconds). |
+
 </details>
 
-<details>
-  <summary><code>/add</code></summary>
-  <br>
-  <b>Usage:</b> <code>/add https://google.com</code><br>
-  <b>Description:</b> Adds a new URL to your monitoring list.
-</details>
-
-<details>
-  <summary><code>/del</code></summary>
-  <br>
-  <b>Usage:</b> <code>/del https://google.com</code><br>
-  <b>Description:</b> Stops monitoring the specified URL and removes it from the database.
-</details>
-
-<details>
-  <summary><code>/check</code> or <code>/stats</code></summary>
-  <br>
-  <b>Usage:</b> <code>/check</code><br>
-  <b>Description:</b> Displays a live dashboard with the status (Online/Offline) of all your URLs.
-</details>
-
-<details>
-  <summary><code>/time</code></summary>
-  <br>
-  <b>Usage:</b> <code>/time</code><br>
-  <b>Description:</b> (Admin Only) View or change the global monitoring interval (in seconds).
-</details>
 
 ---
 
