@@ -15,124 +15,97 @@
 
 ---
 
-### 🛠 Config Vars
+#### *How To Deploy ➠*
 
-*To run this bot, you need to set up the following environment variables. Click on a variable to see details.*
+<details><summary><b><i>Deploy on Multiple Servers</i></summary></b></summary>
+<br>
+<details>
+    <summary><b><i>Deploy on Heroku (Paid)</i></b></summary>
+    <br>
+
+  * ***Fork This Repo***
+  * ***Click on Deploy Easily***
+  * ***Press the below Button to Fast Deploy on Heroku***
+
+  [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
+
+  * ***Go to <a href="#mandatory-vars">Variables Tab</a> for more info on Setting up Environmental Variables.***
+  </details>
 
 <details>
-  <summary><code>API_ID</code> <small>(Required)</small></summary>
-  <br>
-  <b>Description:</b> Your Telegram API ID.<br>
-  <b>How to get:</b> Log in to <a href="https://my.m.org">my.telegram.org</a>.
+  <summary><b><i>Deploy Using Docker</i></b></summary>
+<br>
+
+* ***Clone the Repository :***
+```sh
+git clone https://github.com/myselfneon/FileStream-Bot
+cd FileStreamBot
+```
+
+* ***Build own Docker Image :***
+```sh
+docker build -t file-stream .
+```
+
+* ***Create ENV and Start Container :***
+```sh
+docker run -d --restart unless-stopped --name fsb \
+-v /PATH/TO/.env:/app/.env \
+-p 8000:8000 \
+file-stream
+```
+
+* ***If you Need to Change the Variables in .env File after your Bot was Already Started, all you need to do is Restart the container for the Bot Settings to get Updated:***
+```sh
+docker restart fsb
+```
+
 </details>
 
 <details>
-  <summary><code>API_HASH</code> <small>(Required)</small></summary>
-  <br>
-  <b>Description:</b> Your Telegram API Hash.<br>
-  <b>How to get:</b> Log in to <a href="https://my.telegram.org">my.telegram.org</a>.
-</details>
+    <summary><b><i>Deploy Locally</i></b></summary>
+    <br>
 
-<details>
-  <summary><code>BOT_TOKEN</code> <small>(Required)</small></summary>
-  <br>
-  <b>Description:</b> The authorization token for your bot.<br>
-  <b>How to get:</b> Create a bot via <a href="https://t.me/BotFather">@BotFather</a> on Telegram.
-</details>
+  ```sh
+  git clone https://github.com/myselfneon/FileStream-Bot
+  cd FileStreamBot
+  python3 -m venv ./venv
+  . ./venv/bin/activate
+  pip install -r requirements.txt
+  python3 -m FileStream
+  ```
 
-<details>
-  <summary><code>DB_URI</code> <small>(Required)</small></summary>
-  <br>
-  <b>Description:</b> Your MongoDB Connection String.<br>
-  <b>Format:</b> <code>mongodb+srv://user:pass@cluster.mongodb.net/...</code>
-</details>
+  * ***To stop the Bot Press <kbd>CTRL</kbd> + <kbd>C</kbd>.***
 
-<details>
-  <summary><code>DB_NAME</code> <small>(Optional)</small></summary>
-  <br>
-  <b>Description:</b> The name of the database to use.<br>
-  <b>Default:</b> <code>UptimeBot</code>
-</details>
+  * ***If you want to run this Bot 24/7 on a VPS, follow these Steps :***
+  ```sh
+  sudo apt install tmux -y
+  tmux
+  python3 -m FileStream
+  ```
+  * ***Now you can Close the VPS terminal — the Bot will Keep Running in the Background.***
 
-<details>
-  <summary><code>ADMIN</code> <small>(Optional)</small></summary>
-  <br>
-  <b>Description:</b> Your Telegram User ID. Used for sending startup logs/errors.<br>
-  <b>How to get:</b> Use a bot like @userinfobot.
-</details>
-
-<details>
-  <summary><code>PORT</code> <small>(Optional)</small></summary>
-  <br>
-  <b>Description:</b> The port for the internal web server.<br>
-  <b>Default:</b> <code>8080</code> (Required for Render/Heroku).
-</details>
-
----
-
-### 🤖 Bot Commands
-
-<details>
-  <summary><b>Click to view all commands</b></summary>
-  <br>
-
-| Command | Description |
-| :--- | :--- |
-| `/start` | Check if the bot is alive and receive the welcome menu. |
-| `/add` | Adds a new URL to your monitoring list. |
-| `/del` | Stops monitoring the specified URL and removes it from the database. |
-| `/check` | Displays a live dashboard with the status (Online/Offline) of all your URLs. |
-| `/time` | **(Admin Only)** View or change the global monitoring interval (in seconds). |
+  </details>
 
 </details>
 
+#### *Config Variables ➠*
 
----
+<details><summary><b><i>ENV Variables</i></summary></b></summary>
 
-## 🐳 Deployment Methods
+#### *Mandatory Variables ➠*
 
-### Method 1: Docker (Recommended)
+* [`API_ID`]: ***From [My Telegram](https://my.telegram.org).***
+* [`API_HASH`]: ***From [My Telegram](https://my.telegram.org).***
+* [`OWNER_ID`]: ***Your Telegram User ID. Get From [@MissRose_Bot](https://t.me/MissRose_Bot)***
+* [`BOT_TOKEN`]: ***Telegram API Bot Token, Get it from [@BotFather](https://t.me/BotFather).***
+* [`FLOG_CHANNEL`]: ***ID of the Channel where Bot will Store all Files from Users `int`***
+* [`ULOG_CHANNEL`]: ***ID of the Channel where Bot will send Logs of New Users`int`***
+* [`BOT_WORKERS`]: ***Number of updates Bot should process from Telegram at once, by Default to 10 Updates. `int`***
+* [`DATABASE_URL`]: ***[MongoDB URI](https://cloud.mongodb.com) for Saving User Data and Files List created by User. `str`***
+* [`FQDN`]: ***A Fully Qualified Domain Name if present without https. Defaults `BIND_ADDRESS`.***
 
-1.  **Clone the repository:**
-    ```bash
-    git clone [https://github.com/YourUsername/Uptimer-Bot-neon.git](https://github.com/YourUsername/Uptimer-Bot-neon.git)
-    cd Uptimer-Bot-neon
-    ```
-
-2.  **Build the Docker image:**
-    ```bash
-    docker build -t uptime-bot .
-    ```
-
-3.  **Run the container:**
-    ```bash
-    docker run -d \
-      -e API_ID="12345" \
-      -e API_HASH="your_api_hash" \
-      -e BOT_TOKEN="your_bot_token" \
-      -e DB_URI="your_mongodb_uri" \
-      -e ADMIN="your_telegram_id" \
-      uptime-bot
-    ```
-
-### Method 2: Local Deployment
-
-1.  **Install Python 3.10+** and Clone the repo.
-2.  **Install dependencies:**
-    ```bash
-    pip3 install -r requirements.txt
-    ```
-3.  **Set Environment Variables** (or create a `.env` file).
-4.  **Run the bot:**
-    ```bash
-    python3 main.py
-    ```
-
-### Method 3: Cloud (Heroku/Render)
-
-* **Build Command:** `pip3 install -r requirements.txt`
-* **Start Command:** `python3 main.py`
-* **Note:** The bot includes a web server on `app.py`. If using Render/Heroku, ensure you provide the `PORT` variable so the platform detects the service is running.
+</details>
 
 ## 📂 Project Structure
 
