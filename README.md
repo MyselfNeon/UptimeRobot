@@ -15,32 +15,99 @@
 
 ---
 
-### 🛠 *Config Vars*
+### 🛠 Config Vars
 
-*To run this bot, you need to set up the following environment variables.*
+*To run this bot, you need to set up the following environment variables. Click on a variable to see details.*
 
-| Variable | Description | Required |
-| :--- | :--- | :--- |
-| `API_ID` | Your Telegram API ID (get from my.telegram.org) | **Yes** |
-| `API_HASH` | Your Telegram API Hash (get from my.telegram.org) | **Yes** |
-| `BOT_TOKEN` | Your Bot Token (get from @BotFather) | **Yes** |
-| `DB_URI` | Your MongoDB Connection String | **Yes** |
-| `DB_NAME` | Database Name (Default: `UptimeBot`) | No |
-| `ADMIN` | Your Telegram User ID (For startup logs) | No |
-| `PORT` | Port for the web server (Default: `8080`) | No |
+<details>
+  <summary><code>API_ID</code> <small>(Required)</small></summary>
+  <br>
+  <b>Description:</b> Your Telegram API ID.<br>
+  <b>How to get:</b> Log in to <a href="https://my.telegram.org">my.telegram.org</a>.
+</details>
+
+<details>
+  <summary><code>API_HASH</code> <small>(Required)</small></summary>
+  <br>
+  <b>Description:</b> Your Telegram API Hash.<br>
+  <b>How to get:</b> Log in to <a href="https://my.telegram.org">my.telegram.org</a>.
+</details>
+
+<details>
+  <summary><code>BOT_TOKEN</code> <small>(Required)</small></summary>
+  <br>
+  <b>Description:</b> The authorization token for your bot.<br>
+  <b>How to get:</b> Create a bot via <a href="https://t.me/BotFather">@BotFather</a> on Telegram.
+</details>
+
+<details>
+  <summary><code>DB_URI</code> <small>(Required)</small></summary>
+  <br>
+  <b>Description:</b> Your MongoDB Connection String.<br>
+  <b>Format:</b> <code>mongodb+srv://user:pass@cluster.mongodb.net/...</code>
+</details>
+
+<details>
+  <summary><code>DB_NAME</code> <small>(Optional)</small></summary>
+  <br>
+  <b>Description:</b> The name of the database to use.<br>
+  <b>Default:</b> <code>UptimeBot</code>
+</details>
+
+<details>
+  <summary><code>ADMIN</code> <small>(Optional)</small></summary>
+  <br>
+  <b>Description:</b> Your Telegram User ID. Used for sending startup logs/errors.<br>
+  <b>How to get:</b> Use a bot like @userinfobot.
+</details>
+
+<details>
+  <summary><code>PORT</code> <small>(Optional)</small></summary>
+  <br>
+  <b>Description:</b> The port for the internal web server.<br>
+  <b>Default:</b> <code>8080</code> (Required for Render/Heroku).
+</details>
 
 ---
 
 ### 🤖 Bot Commands
 
-| Command | Description |
-| :--- | :--- |
-| `/start` | Check if the bot is alive and get the menu. |
-| `/add <url>` | Add a new URL to monitor (e.g., `/add https://google.com`). |
-| `/del <url>` | Stop monitoring a specific URL. |
-| `/check` | View the dashboard with live status of all your URLs. |
-| `/stats` | Same as `/check`. |
-| `/time` | (Admin) View or change the global monitoring interval in seconds. |
+*Click on a command to see its usage.*
+
+<details>
+  <summary><code>/start</code></summary>
+  <br>
+  <b>Usage:</b> <code>/start</code><br>
+  <b>Description:</b> Check if the bot is alive and receive the welcome menu.
+</details>
+
+<details>
+  <summary><code>/add</code></summary>
+  <br>
+  <b>Usage:</b> <code>/add https://google.com</code><br>
+  <b>Description:</b> Adds a new URL to your monitoring list.
+</details>
+
+<details>
+  <summary><code>/del</code></summary>
+  <br>
+  <b>Usage:</b> <code>/del https://google.com</code><br>
+  <b>Description:</b> Stops monitoring the specified URL and removes it from the database.
+</details>
+
+<details>
+  <summary><code>/check</code> or <code>/stats</code></summary>
+  <br>
+  <b>Usage:</b> <code>/check</code><br>
+  <b>Description:</b> Displays a live dashboard with the status (Online/Offline) of all your URLs.
+</details>
+
+<details>
+  <summary><code>/time</code></summary>
+  <br>
+  <b>Usage:</b> <code>/time</code><br>
+  <b>Description:</b> (Admin Only) View or change the global monitoring interval (in seconds).
+</details>
 
 ---
 
@@ -88,8 +155,6 @@
 * **Build Command:** `pip3 install -r requirements.txt`
 * **Start Command:** `python3 main.py`
 * **Note:** The bot includes a web server on `app.py`. If using Render/Heroku, ensure you provide the `PORT` variable so the platform detects the service is running.
-
----
 
 ## 📂 Project Structure
 
