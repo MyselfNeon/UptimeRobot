@@ -94,7 +94,7 @@ async def stats_command(client, message):
             status_icon = "🟢" if is_online else "🔴"
             status_text = "Online" if is_online else f"Offline ({code})"
             
-            text += f"**{index + 1}.** `{url}`\n   ╚ **Status:** {status_text} {status_icon}\n\n"
+            text += f"**{index + 1}.** `{url}`\n   **╚ __Status:__** **__{status_text}__** {status_icon}\n\n"
     
     # New Single "Ping All" Button
     buttons = InlineKeyboardMarkup([
