@@ -18,13 +18,13 @@ async def start_command(client, message):
     
     # Premium Welcome Message
     text = (
-        f"👋 **__Hello {user_name}__**\n\n"
+        f"<blockquote>👋 **__Hello {user_name}__**</blockquote>\n\n"
         "🎉 **__Welcome to your Premium Uptime Monitor Bot. __**"
         "**__I am here to Protect your Web Urls from going to Sleep.__**\n\n"
         "⁉️ **__Features I Provide :__**\n"
         "– __I monitor your URLs 24/7 and Alert you Instantly if they go Down.__\n\n"
-        "<blockquote>🛠 **__Control Menu :__**\n"
-        "– **__Start Monitoring an URL** (/add Url)__\n"
+        "🛠 **__Control Menu :__**\n"
+        "<blockquote>– **__Start Monitoring an URL** (/add Url)__\n"
         "– **__Stop Monitoring an URL** (/del Url)__\n"
         "– **__Live Status Dashboard** (/check)__\n"
         "– **__Set Monitor Interval** (/time)__</blockquote>"
