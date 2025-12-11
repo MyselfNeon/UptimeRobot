@@ -7,91 +7,115 @@
 
 import asyncio
 import aiohttp
+import time
+import ssl
+import certifi
+import socket
 from pyrogram import Client
+from datetime import datetime
+from urllib.parse import urlparse
 from .db import db
 
-# Format: {"user_id|url": "online/offline"}
+# Cache to prevent spamming the same alert
+# Format: {"user_id|url": "online"}
 url_states = {}
 
-# --- Monitoring & Keep-alive Logic ---
-async def check_url(session, url):
-    """
-    Checks the status of a URL. Returns (is_online, status_code/error).
-    """
-    headers = {
-        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
-        "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8",
-        "Connection": "keep-alive"
-    }
+async def get_ssl_expiry(url):
+    """Check SSL Certificate Expiry Date"""
     try:
-        async with session.get(url, timeout=10, headers=headers) as response:
-            if response.status == 200:
-                return True, response.status
-            else:
-                return False, response.status
+        parsed = urlparse(url)
+        hostname = parsed.netloc
+        context = ssl.create_default_context(cafile=certifi.where())
+        conn = context.wrap_socket(socket.socket(socket.AF_INET), server_hostname=hostname)
+        conn.settimeout(3.0)
+        conn.connect((hostname, 443))
+        ssl_info = conn.getpeercert()
+        # Parse date
+        expire_date = datetime.strptime(ssl_info['notAfter'], r'%b %d %H:%M:%S %Y %Z')
+        days_left = (expire_date - datetime.now()).days
+        conn.close()
+        return days_left
+    except:
+        return None
+
+async def advanced_check(session, url):
+    """
+    Returns: (is_online, status_code, latency_ms)
+    """
+    start_time = time.perf_counter()
+    try:
+        async with session.get(url, timeout=15) as response:
+            latency = (time.perf_counter() - start_time) * 1000 # to ms
+            return True, response.status, int(latency)
     except Exception as e:
-        return False, "Error"
+        return False, "Timeout/Error", 0
+
+async def process_url(app, session, entry):
+    """Process a single URL independently"""
+    user_id = entry.get("user_id")
+    url = entry.get("url")
+    unique_key = f"{user_id}|{url}"
+    
+    # 1. Check Status
+    is_online, code, latency = await advanced_check(session, url)
+    
+    # 2. Retry Logic (Smart Filtering)
+    if not is_online:
+        await asyncio.sleep(2)
+        is_online, code, latency = await advanced_check(session, url)
+
+    # 3. Update Database with Stats
+    await db.update_url_status(user_id, url, code, latency, is_online)
+
+    # 4. Handle Alerts
+    prev_state = url_states.get(unique_key, "online") # Default to online to avoid startup spam
+    
+    if is_online:
+        if prev_state == 'offline':
+            # RECOVERY ALERT
+            try:
+                await app.send_message(
+                    user_id,
+                    f"🟢 **Service Recovered!**\n\n"
+                    f"🔗 **URL:** `{url}`\n"
+                    f"⚡ **Latency:** `{latency}ms`\n"
+                    f"✅ **Status:** Back Online (200 OK)"
+                )
+            except Exception as e:
+                print(f"Failed to alert {user_id}: {e}")
+
+        url_states[unique_key] = 'online'
+    else:
+        if prev_state != 'offline':
+            # DOWN ALERT
+            try:
+                await app.send_message(
+                    user_id,
+                    f"🔴 **Service DOWN!**\n\n"
+                    f"🔗 **URL:** `{url}`\n"
+                    f"⚠️ **Error:** `{code}`\n"
+                    f"📉 **Latency:** `0ms`\n"
+                    f"🛠 Please check your server immediately."
+                )
+            except Exception as e:
+                print(f"Failed to alert {user_id}: {e}")
+
+            url_states[unique_key] = 'offline'
 
 async def monitor_task(app: Client):
-    print("Started Premium Keep-Alive and Monitoring Service...")
+    print("🚀 Started High-Performance Monitoring Engine...")
     
     async with aiohttp.ClientSession() as session:
         while True:
-            # 1. Fetch ALL monitored URLs from all users
             all_entries = await db.get_all_monitored_datas()
             interval = await db.get_interval()
 
-            for entry in all_entries:
-                user_id = entry.get("user_id")
-                url = entry.get("url")
-                unique_key = f"{user_id}|{url}"
-
-                # --- CHECK 1: Initial Check ---
-                is_online, status = await check_url(session, url)
-
-                # --- RETRY LOGIC (Double/Triple Check) ---
-                if not is_online:
-                    # Retry 2 times with 10s delay
-                    for attempt in range(2):
-                        await asyncio.sleep(10) # Immediate short wait
-                        is_online, status = await check_url(session, url)
-                        if is_online:
-                            break 
-
-                prev_state = url_states.get(unique_key)
-
-                if is_online:
-                    # Recovery Alert
-                    if prev_state == 'offline':
-                        try:
-                            await app.send_message(
-                                user_id,
-                                f"🟢 **__Service Recovered!__**\n\n"
-                                f"🔗 **__URL:__** `{url}`\n"
-                                f"⚡ **__Status:__** **Online** (200 OK)\n"
-                                f"🥂 **__Note:__** __Your Service is back in Action.__"
-                            )
-                        except Exception as e:
-                            print(f"Failed to send alert to {user_id}: {e}")
-                    
-                    url_states[unique_key] = 'online'
-                
-                else:
-                    # Down Alert
-                    if prev_state != 'offline':
-                        try:
-                            await app.send_message(
-                                user_id,
-                                f"🔴 **__Service is DOWN!__**\n\n"
-                                f"🔗 **__URL:__** `{url}`\n"
-                                f"⚠️ **__Error:__** `{status}`\n"
-                                f"🔄 **__Tries:__** __Failed after 3 attempts.__\n"
-                                f"🛠 **__Action:__** __Please Check your Server Manually.__"
-                            )
-                        except Exception as e:
-                            print(f"Failed to send alert to {user_id}: {e}")
-                        
-                        url_states[unique_key] = 'offline'
+            # CONCURRENT EXECUTION
+            tasks = [process_url(app, session, entry) for entry in all_entries]
             
-            # Sleep for the global interval
+            # Run all checks simultaneously
+            if tasks:
+                await asyncio.gather(*tasks)
+            
             await asyncio.sleep(interval)
+            
