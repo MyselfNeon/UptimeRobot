@@ -8,9 +8,7 @@
 from pyrogram import Client, filters
 from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
 from .db import db
-from .image_gen import draw_dashboard
 from info import ADMIN
-import aiohttp
 
 # --- Start Command ---
 @Client.on_message(filters.command("start") & filters.private)
@@ -18,16 +16,16 @@ async def start_command(client, message):
     user_name = message.from_user.first_name
     
     text = (
-        f"<blockquote>👋 **__Hello {user_name}__**</blockquote>\n\n"
-        "🎉 **__Welcome to your Premium Uptime Monitor Bot. __**"
+        f">👋 **__Hello {user_name}__**\n\n"
+        "🎉 **__Welcome to your Premium Uptime Monitor Bot.__**\n"
         "**__I am here to Protect your Web Urls from going to Sleep.__**\n\n"
         "⁉️ **__Features I Provide :__**\n"
         "– __I monitor your URLs 24/7 and Alert you Instantly if they go Down.__\n\n"
         "🛠 **__Control Menu :__**\n"
-        "<blockquote>– **__Start Monitoring an URL** (/add Url)__\n"
-        "– **__Stop Monitoring an URL** (/del Url)__\n"
-        "– **__Live Status Dashboard** (/check)__\n"
-        "– **__Set Monitor Interval** (/time)__</blockquote>"
+        "> **__Start Monitoring:__** `/add Url`\n"
+        "> **__Stop Monitoring:__** `/del Url`\n"
+        "> **__Live Dashboard:__** `/check`\n"
+        "> **__Set Interval:__** `/time`"
     )
     
     buttons = InlineKeyboardMarkup([
@@ -47,16 +45,16 @@ async def add_url_command(client, message):
     
     url = message.command[1]
     if not url.startswith("http"):
-        return await message.reply_text("⛔ **__Invalid URL !\nMust start with `http://` or `https://`__**")
+        return await message.reply_text("⛔ **__Invalid URL!__**\n__Must start with `http://` or `https://`__")
     
     if await db.is_url_exist(user_id, url):
         return await message.reply_text("⚠️ **__URL Already Exists!__**")
     
     await db.add_url(user_id, url)
     await message.reply_text(
-        f"✅ **__New Added !__**\n\n"
-        f"🔗 **__URL:** {url}__\n"
-        f"🚀 **__Status:__** **__Monitoring Started ...__**"
+        f"✅ **__New Added!__**\n\n"
+        f"🔗 **__URL:__** `{url}`\n"
+        f"🚀 **__Status:__** **__Monitoring Started...__**"
     )
 
 # --- Delete Url Command ---
@@ -69,52 +67,69 @@ async def delete_url_command(client, message):
     
     url = message.command[1]
     if not await db.is_url_exist(user_id, url):
-        return await message.reply_text("🤷‍♂️ **__Not Found !__**")
+        return await message.reply_text("🤷‍♂️ **__Not Found!__**")
     
     await db.remove_url(user_id, url)
-    await message.reply_text(f"🗑 **__Deleted:** {url}__")
+    await message.reply_text(f"🗑 **__Deleted:__** `{url}`")
 
-# --- Visual Dashboard Command ---
-@Client.on_message(filters.command(["check", "stats", "dashboard"]) & filters.private)
+# --- Text Dashboard Command (No Images) ---
+@Client.on_message(filters.command(["check", "stats", "dashboard", "list"]) & filters.private)
 async def stats_command(client, message):
     user_id = message.from_user.id
     user_name = message.from_user.first_name
     
-    wait_msg = await message.reply_text("🎨 **__Drawing your Dashboard ...__**")
+    wait_msg = await message.reply_text("🔄 **__Fetching Data...__**")
     
-    # 1. Fetch Data
+    # Fetch full data objects (not just strings) to get stats
     urls_data = await db.col.find({"user_id": user_id}).to_list(length=None)
     
     if not urls_data:
-        return await wait_msg.edit_text("📂 **__List is Empty !\n— Use `/add` to monitor a site.__**")
-
-    # 2. Generate Image
-    try:
-        photo_file = draw_dashboard(user_name, urls_data)
+        return await wait_msg.edit_text("📂 **__List is Empty!__**\n__Use__ `/add` __to monitor a site.__")
+    
+    # Build the text report
+    text = f"📊 **__Your Monitoring Dashboard__**\n__User: {user_name}__\n\n"
+    
+    for index, data in enumerate(urls_data):
+        url = data.get('url', 'Unknown')
+        status = data.get('status', 'Unknown')
+        latency = data.get('response_time', 0)
         
-        await message.reply_photo(
-            photo=photo_file,
-            caption=f"📊 **__Live Status Report__**\n— __Generated for **{user_name}**__",
-            reply_markup=InlineKeyboardMarkup([
-                [InlineKeyboardButton("🔄 Refresh", callback_data="ping_all")]
-            ])
+        # Calculate Uptime Percentage
+        total = data.get('total_checks', 1)
+        up_count = data.get('uptime_count', 0)
+        percentage = round((up_count / total) * 100, 2) if total > 0 else 0
+        
+        # Formatting
+        is_online = status == 200
+        icon = "🟢" if is_online else "🔴"
+        status_text = "Online" if is_online else f"Offline ({status})"
+        
+        text += (
+            f"**{index + 1}.** `{url}`\n"
+            f"   **╚ Status:** {status_text} {icon}\n"
+            f"   **╚ Ping:** `{latency}ms` ⚡\n"
+            f"   **╚ Uptime:** `{percentage}%` 📈\n\n"
         )
-        await wait_msg.delete()
-    except Exception as e:
-        await wait_msg.edit_text(f"⚠️ **__Error generating image:__**\n `{e}`")
+    
+    buttons = InlineKeyboardMarkup([
+        [InlineKeyboardButton("🔄 Refresh Stats", callback_data="ping_all")]
+    ])
+    
+    await wait_msg.edit_text(text, reply_markup=buttons, disable_web_page_preview=True)
 
 # --- Refresh Callback ---
 @Client.on_callback_query(filters.regex("ping_all"))
 async def ping_all_callback(client, query):
-    # Just re-trigger the stats command logic
     await query.answer("🔄 Refreshing...")
-    # Ideally, call the function directly or ask user to run command
-    # For now, we just acknowledge. Real refresh requires re-generating image.
     await stats_command(client, query.message)
 
-# --- Time Command (Admin Only) ---
-@Client.on_message(filters.command("time") & filters.user(ADMIN))
+# --- Time Command (Fixed) ---
+@Client.on_message(filters.command("time") & filters.private)
 async def time_command(client, message):
+    # Check Admin Permission Inside Function for Better Feedback
+    if message.from_user.id != ADMIN:
+        return await message.reply_text("⛔ **__Access Denied!__**\n__This command is for Admins only.__")
+
     current_time = await db.get_interval()
     
     text = (
@@ -123,8 +138,8 @@ async def time_command(client, message):
     )
     
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📝 Cʜᴀɴɢᴇ", callback_data="time_change"),
-         InlineKeyboardButton("❌ Cʟᴏsᴇ", callback_data="time_close")]
+        [InlineKeyboardButton("📝 Change", callback_data="time_change"),
+         InlineKeyboardButton("❌ Close", callback_data="time_close")]
     ])
     
     await message.reply_text(text, reply_markup=buttons)
@@ -147,13 +162,18 @@ async def time_callbacks(client, query):
         )
 
 # --- Handle Time Input ---
-@Client.on_message(filters.reply & filters.user(ADMIN))
+@Client.on_message(filters.reply & filters.private)
 async def set_time_input(client, message):
+    # Only Admin can set time
+    if message.from_user.id != ADMIN:
+        return
+
+    # Check if reply is to our specific message
     if message.reply_to_message and "Send new interval" in message.reply_to_message.text:
         try:
             new_time = int(message.text)
             if new_time < 10: 
-                return await message.reply_text("⚠️ **__Minimum 10s !__**")
+                return await message.reply_text("⚠️ **__Minimum 10s!__**")
             
             await db.set_interval(new_time)
             await message.reply_text(f"✅ **__Interval set to {new_time}s.__**")
