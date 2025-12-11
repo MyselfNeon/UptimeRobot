@@ -6,6 +6,7 @@
 # ---------------------------------------------------
 
 import motor.motor_asyncio
+import time
 from info import DB_URI, DB_NAME
 
 class Database:
@@ -16,7 +17,16 @@ class Database:
         self.config = self.db.config
 
     def new_url(self, user_id, url):
-        return dict(user_id=user_id, url=url)
+        return dict(
+            user_id=user_id,
+            url=url,
+            status="Unknown",
+            response_time=0,
+            last_checked=None,
+            uptime_count=0,
+            total_checks=0,
+            ssl_expiry=None
+        )
 
     async def add_url(self, user_id, url):
         # Adds URL specifically for this user
@@ -33,14 +43,33 @@ class Database:
         return [x["url"] for x in urls]
 
     async def get_all_monitored_datas(self):
-        # For the background monitor: Get ALL data (user_id and url)
+        # For the background monitor: Get ALL data
         return await self.col.find().to_list(length=None)
 
     async def is_url_exist(self, user_id, url):
-        # Check if URL exists for this specific user
         found = await self.col.find_one({"user_id": user_id, "url": url})
         return bool(found)
     
+    # --- Advanced Stats Updates ---
+    async def update_url_status(self, user_id, url, status, response_time, is_up):
+        """Updates stats for analytics"""
+        update_data = {
+            "$set": {
+                "status": status,
+                "response_time": response_time,
+                "last_checked": time.time()
+            },
+            "$inc": {"total_checks": 1}
+        }
+        
+        if is_up:
+            update_data["$inc"]["uptime_count"] = 1
+            
+        await self.col.update_one(
+            {"user_id": user_id, "url": url},
+            update_data
+        )
+
     # Configuration (Global Interval)
     async def set_interval(self, seconds):
         await self.config.update_one(
