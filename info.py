@@ -1,20 +1,17 @@
 # ---------------------------------------------------
-# File Name: Info.py
-# Author: MyselfNeon
-# GitHub: https://github.com/MyselfNeon/
-# Telegram: https://t.me/MyelfNeon
+# File Name: info.py
 # ---------------------------------------------------
-
 import os
 
 # Get these from https://my.telegram.org
-API_ID = int(os.environ.get("API_ID", ""))
+API_ID = int(os.environ.get("API_ID", "0"))
 API_HASH = os.environ.get("API_HASH", "")
 
 # Get this from @BotFather
 BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 
-# Admin ID (For startup logs only)
+# Admin ID (For startup logs and restricted commands)
+# Reads from ENV; defaults to 0 if not set.
 ADMIN = int(os.environ.get("ADMIN", "0"))
 
 # Server Port
