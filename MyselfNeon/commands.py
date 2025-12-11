@@ -1,4 +1,4 @@
-# ---------------------------------------------------
+Drawing----------------------------------------------
 # File Name: Commands.py
 # Author: MyselfNeon
 # GitHub: https://github.com/MyselfNeon/
@@ -18,22 +18,21 @@ async def start_command(client, message):
     user_name = message.from_user.first_name
     
     text = (
-        f"<blockquote>👋 **Hello {user_name}**</blockquote>\n\n"
-        "🎉 **Welcome to your Premium Uptime Monitor.**\n"
-        "**I protect your URLs from sleeping.**\n\n"
-        "⁉️ **Features:**\n"
-        "– __Real-time Monitoring & Latency Tracking__\n"
-        "– __Visual Dashboard Reports__\n\n"
-        "🛠 **Controls:**\n"
-        "<blockquote>– `/add Url` – Start Monitoring\n"
-        "– `/del Url` – Stop Monitoring\n"
-        "– `/check` – Visual Dashboard\n"
-        "– `/time` – Set Interval (Admin)</blockquote>"
+        f"<blockquote>👋 **__Hello {user_name}__**</blockquote>\n\n"
+        "🎉 **__Welcome to your Premium Uptime Monitor Bot. __**"
+        "**__I am here to Protect your Web Urls from going to Sleep.__**\n\n"
+        "⁉️ **__Features I Provide :__**\n"
+        "– __I monitor your URLs 24/7 and Alert you Instantly if they go Down.__\n\n"
+        "🛠 **__Control Menu :__**\n"
+        "<blockquote>– **__Start Monitoring an URL** (/add Url)__\n"
+        "– **__Stop Monitoring an URL** (/del Url)__\n"
+        "– **__Live Status Dashboard** (/check)__\n"
+        "– **__Set Monitor Interval** (/time)__</blockquote>"
     )
     
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🆘 Support", url="https://t.me/MyselfNeon"),
-         InlineKeyboardButton("📢 Updates", url="https://t.me/NeonFiles")]
+        [InlineKeyboardButton("🆘 Sᴜᴘᴘᴏʀᴛ", url="https://t.me/MyselfNeon"),
+         InlineKeyboardButton("📢 Uᴘᴅᴀᴛᴇs", url="https://t.me/NeonFiles")]
     ])
     
     await message.reply_text(text, reply_markup=buttons)
@@ -44,20 +43,20 @@ async def add_url_command(client, message):
     user_id = message.from_user.id
 
     if len(message.command) < 2:
-        return await message.reply_text("⚠️ **Usage:** `/add https://your-site.com`")
+        return await message.reply_text("⚠️ **__Usage:__** `/add https://your-site.com`")
     
     url = message.command[1]
     if not url.startswith("http"):
-        return await message.reply_text("⛔ **Invalid URL!** Must start with `http://` or `https://`")
+        return await message.reply_text("⛔ **__Invalid URL !\nMust start with `http://` or `https://`__**")
     
     if await db.is_url_exist(user_id, url):
-        return await message.reply_text("⚠️ **Already Exists!**")
+        return await message.reply_text("⚠️ **__URL Already Exists!__**")
     
     await db.add_url(user_id, url)
     await message.reply_text(
-        f"✅ **Added!**\n\n"
-        f"🔗 **URL:** `{url}`\n"
-        f"🚀 **Status:** Monitoring Started..."
+        f"✅ **__New Added !__**\n\n"
+        f"🔗 **__URL:** {url}__\n"
+        f"🚀 **__Status:__** **__Monitoring Started ...__**"
     )
 
 # --- Delete Url Command ---
@@ -66,14 +65,14 @@ async def delete_url_command(client, message):
     user_id = message.from_user.id
 
     if len(message.command) < 2:
-        return await message.reply_text("⚠️ **Usage:** `/del https://your-site.com`")
+        return await message.reply_text("⚠️ **__Usage:__** `/del https://your-site.com`")
     
     url = message.command[1]
     if not await db.is_url_exist(user_id, url):
-        return await message.reply_text("🤷‍♂️ **Not Found!**")
+        return await message.reply_text("🤷‍♂️ **__Not Found !__**")
     
     await db.remove_url(user_id, url)
-    await message.reply_text(f"🗑 **Deleted:** `{url}`")
+    await message.reply_text(f"🗑 **__Deleted:** {url}__")
 
 # --- Visual Dashboard Command ---
 @Client.on_message(filters.command(["check", "stats", "dashboard"]) & filters.private)
@@ -81,13 +80,13 @@ async def stats_command(client, message):
     user_id = message.from_user.id
     user_name = message.from_user.first_name
     
-    wait_msg = await message.reply_text("🎨 **Drawing your Dashboard...**")
+    wait_msg = await message.reply_text("🎨 **__Drawing your Dashboard ...__**")
     
     # 1. Fetch Data
     urls_data = await db.col.find({"user_id": user_id}).to_list(length=None)
     
     if not urls_data:
-        return await wait_msg.edit_text("📂 **List is Empty!**\nUse `/add` to monitor a site.")
+        return await wait_msg.edit_text("📂 **__List is Empty !\n— Use `/add` to monitor a site.__**")
 
     # 2. Generate Image
     try:
@@ -95,14 +94,14 @@ async def stats_command(client, message):
         
         await message.reply_photo(
             photo=photo_file,
-            caption=f"📊 **Live Status Report**\n__Generated for {user_name}__",
+            caption=f"📊 **__Live Status Report__**\n— __Generated for **{user_name}**__",
             reply_markup=InlineKeyboardMarkup([
                 [InlineKeyboardButton("🔄 Refresh", callback_data="ping_all")]
             ])
         )
         await wait_msg.delete()
     except Exception as e:
-        await wait_msg.edit_text(f"⚠️ **Error generating image:** `{e}`")
+        await wait_msg.edit_text(f"⚠️ **__Error generating image:__**\n `{e}`")
 
 # --- Refresh Callback ---
 @Client.on_callback_query(filters.regex("ping_all"))
@@ -119,13 +118,13 @@ async def time_command(client, message):
     current_time = await db.get_interval()
     
     text = (
-        f"⏱ **Monitor Interval Settings**\n\n"
-        f"**Current:** {current_time} Seconds"
+        f"⏱ **__Monitor Interval Settings__**\n\n"
+        f"**__Current: {current_time} Seconds__**"
     )
     
     buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📝 Change", callback_data="time_change"),
-         InlineKeyboardButton("❌ Close", callback_data="time_close")]
+        [InlineKeyboardButton("📝 Cʜᴀɴɢᴇ", callback_data="time_change"),
+         InlineKeyboardButton("❌ Cʟᴏsᴇ", callback_data="time_close")]
     ])
     
     await message.reply_text(text, reply_markup=buttons)
@@ -143,7 +142,7 @@ async def time_callbacks(client, query):
     elif data == "time_change":
         await query.answer()
         await query.message.reply_text(
-            "⏳ **Send new interval (seconds):**",
+            "⏳ **__Send new interval (seconds):__**",
             reply_markup=ForceReply(selective=True)
         )
 
@@ -154,10 +153,10 @@ async def set_time_input(client, message):
         try:
             new_time = int(message.text)
             if new_time < 10: 
-                return await message.reply_text("⚠️ **Minimum 10s!**")
+                return await message.reply_text("⚠️ **__Minimum 10s !__**")
             
             await db.set_interval(new_time)
-            await message.reply_text(f"✅ **Interval set to {new_time}s.**")
+            await message.reply_text(f"✅ **__Interval set to {new_time}s.__**")
         except ValueError:
-            await message.reply_text("⚠️ **Numbers only.**")
+            await message.reply_text("⚠️ **__Numbers only.__**")
             
