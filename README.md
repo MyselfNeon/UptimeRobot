@@ -29,7 +29,7 @@
 
   [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
-  * ***Go to <a href="config-variables">Variables Tab</a> for more info on Setting up Environmental Variables.***
+  * ***Go to <a href="info-variables">Variables Tab</a> for more info on Setting up Environmental Variables.***
   </details>
 
 <details>
