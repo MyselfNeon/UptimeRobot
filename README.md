@@ -1,17 +1,17 @@
 ### *Premium Uptime Monitor Bot*
 
-***A powerful asynchronous Telegram bot written in Python (Pyrogram) to monitor the uptime of your websites. It checks your URLs in real-time and sends instant notifications if a service goes down or recovers.***
+***A powerful, High-performance asynchronous Telegram Bot written in Python (Pyrogram) to monitor the uptime of your websites. It monitors latency, SSL health, and uptime percentage in real-time.***
 
 ### 🚀 *Features*
 
-* ***Real-Time Monitoring: Checks websites 24/7.***
-* ***Instant Alerts: Get notified via Telegram immediately when a site goes Offline or comes back Online.***
-* ***Smart Retry Logic: Prevents false alarms by double-checking (3 attempts) before declaring a site down.***
-* ***Multi-User Support: Users can manage their own list of URLs.***
-* ***Custom Intervals: Admin can change the monitoring speed globally via the `/time` command.***
-* ***Dashboard: View live status of all your monitored links with HTTP response codes.***
-* ***Web Server: Built-in `aiohttp` web server to keep the bot alive on cloud platforms (Render, Railway, Heroku).***
-* ***Database: Persistent storage using MongoDB.***
+* ***🚀 Concurrent Monitoring: Uses `asyncio` to check hundreds of URLs simultaneously without lag.***
+* ***⚡ Latency Tracking: Tracks response time (ping) in milliseconds for every check.***
+* ***🔒 SSL Health Checks: Monitors SSL certificate validity and alerts if expired.***
+* ***📈 Uptime Analytics: Calculates and displays the Uptime Percentage (e.g., 99.98%) for each site.***
+* ***🔔 Smart Alerts: Instant notifications for Downtime, Recovery, and Slow Response times.***
+* ***📊 Live Dashboard: A beautiful text-based dashboard with auto-refresh capabilities.***
+* ***🛠 Multi-User & Admin Controls: Users manage their own lists; Admins control global intervals.***
+* ***☁️ Cloud Ready: Built-in `aiohttp` web server to keep the bot alive on Render/Railway/Heroku.***
 
 ---
 
@@ -67,12 +67,12 @@ docker restart fsb
     <br>
 
   ```sh
-  git clone https://github.com/myselfneon/FileStream-Bot
-  cd FileStreamBot
-  python3 -m venv ./venv
-  . ./venv/bin/activate
-  pip install -r requirements.txt
-  python3 -m FileStream
+  git clone [https://github.com/myselfneon/Uptimer-Bot-neon](https://github.com/myselfneon/Uptimer-Bot-neon)
+cd Uptimer-Bot-neon
+python3 -m venv ./venv
+source ./venv/bin/activate  # Windows: .\venv\Scripts\activate
+pip install -r requirements.txt
+python3 main.py
   ```
 
   * ***To stop the Bot Press <kbd>CTRL</kbd> + <kbd>C</kbd>.***
@@ -97,13 +97,11 @@ docker restart fsb
 
 * [`API_ID`]: ***From [My Telegram](https://my.telegram.org).***
 * [`API_HASH`]: ***From [My Telegram](https://my.telegram.org).***
-* [`OWNER_ID`]: ***Your Telegram User ID. Get From [@MissRose_Bot](https://t.me/MissRose_Bot)***
+* [`ADMIN`]: ***Your Telegram User ID. Get From [@MissRose_Bot](https://t.me/MissRose_Bot)***
 * [`BOT_TOKEN`]: ***Telegram API Bot Token, Get it from [@BotFather](https://t.me/BotFather).***
-* [`FLOG_CHANNEL`]: ***ID of the Channel where Bot will Store all Files from Users `int`***
-* [`ULOG_CHANNEL`]: ***ID of the Channel where Bot will send Logs of New Users`int`***
-* [`BOT_WORKERS`]: ***Number of updates Bot should process from Telegram at once, by Default to 10 Updates. `int`***
-* [`DATABASE_URL`]: ***[MongoDB URI](https://cloud.mongodb.com) for Saving User Data and Files List created by User. `str`***
-* [`FQDN`]: ***A Fully Qualified Domain Name if present without https. Defaults `BIND_ADDRESS`.***
+* [`DB_NAME`]: ***DataBase Name Optional. Default to UptimeBot.***
+* [`DB_URI`]: ***[MongoDB URI](https://cloud.mongodb.com) for Saving Urls and History by User.***
+* [`PORT`]: ***Web Server Port. Optional Defaults to `8080`.***
 
 </details>
 
@@ -112,23 +110,15 @@ docker restart fsb
 <details><summary><b><i>Bot Commands</i></b></summary>
   
 ```
-start - Check if Bot is Alive
-help - Get Help Message
-about - Check About the Bot
-files - Get All Files List of User
-del - Delete Files from DB with File ID [ADMIN]
-ban - Ban any Channel or User from using Bot [ADMIN]
-unban - Unban any Channel or User from using Bot [ADMIN]
-status - To Get Bot Status and Total Users [ADMIN]
-broadcast - To Broadcast any Message to all Users of Bot [ADMIN]
+start - Welcome & Help Menu
+add - Start monitoring a URL (Usage: /add [https://google.com](https://google.com))
+del - Stop monitoring a URL (Usage: /del [https://google.com](https://google.com))
+check - View Live Dashboard with Latency & Uptime %
+time - [Admin Only] Change Global Monitoring Interval
 ```
 <b><i>⪼ Copy all Commands and paste it in <a href='https://t.me/botfather'>BotFather</a> to apply Commands.
 
 </details>
-
-#### *Channel Support ➠*
-
-***The Bot also Supports Telegram Channels, Just add it as an Admin. Whenever a new File is posted in the Channel, the Bot will Automatically edit the Message and add a “Get Download Link” Button.***
 
 #### Contact Developer 👨‍💻
 
@@ -150,13 +140,13 @@ Join My <a href='https://t.me/neonfiles'>Update Channel</a> For More Update Rega
 Uptimer-Bot-neon/
 ├── MyselfNeon/
 │   ├── __init__.py
-│   ├── commands.py    # Telegram Command Handlers
-│   ├── db.py          # MongoDB Database Logic
-│   ├── monitor.py     # Background Monitoring Task
+│   ├── commands.py    # Handlers for /add, /del, /check
+│   ├── db.py          # Database: Stores URLs, Uptime Counts, Latency
+│   ├── monitor.py     # Core Engine: Asyncio, SSL Check, Latency Tracking
 │   └── ...
 ├── app.py             # Web Server (Keep-Alive)
 ├── info.py            # Configuration / Env Vars
-├── main.py            # Entry Point
+├── main.py            # Startup Logic
 ├── Dockerfile         # Docker Config
 └── requirements.txt   # Dependencies
 ```
