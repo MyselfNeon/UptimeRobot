@@ -29,7 +29,7 @@
 
   [![Deploy](https://www.herokucdn.com/deploy/button.svg)](https://heroku.com/deploy)
 
-  * ***Go to <a href="#mandatory-vars">Variables Tab</a> for more info on Setting up Environmental Variables.***
+  * ***Go to <a href="config-variables">Variables Tab</a> for more info on Setting up Environmental Variables.***
   </details>
 
 <details>
@@ -38,21 +38,26 @@
 
 * ***Clone the Repository :***
 ```sh
-git clone https://github.com/myselfneon/FileStream-Bot
-cd FileStreamBot
+git clone [https://github.com/myselfneon/Uptimer-Bot](https://github.com/myselfneon/Uptimer-Bot)
+cd Uptimer-Bot
 ```
 
 * ***Build own Docker Image :***
 ```sh
-docker build -t file-stream .
+docker build -t uptime-bot .
 ```
 
 * ***Create ENV and Start Container :***
 ```sh
-docker run -d --restart unless-stopped --name fsb \
--v /PATH/TO/.env:/app/.env \
--p 8000:8000 \
-file-stream
+docker run -d --restart unless-stopped --name uptime-bot \
+-e API_ID=123456 \
+-e API_HASH=your_api_hash \
+-e BOT_TOKEN=your_bot_token \
+-e ADMIN=123456789 \
+-e DB_URI=your_mongodb_uri \
+-p 8080:8080 \
+uptime-bot
+
 ```
 
 * ***If you Need to Change the Variables in .env File after your Bot was Already Started, all you need to do is Restart the container for the Bot Settings to get Updated:***
