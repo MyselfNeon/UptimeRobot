@@ -41,7 +41,7 @@ async def get_dashboard(user_id, page=1):
         # Styled List Item
         text += (
             f"**__{idx}. `{data['url']}`__**\n"
-            f"   **╚** __{s_icon} {status} ⚡ {resp}ms 📈 {uptime_pct}%__\n\n"
+            f"   **╚** {s_icon} __{status} ⚡ {resp}ms 📈 {uptime_pct}%__\n\n"
         )
     
     # --- Button Logic (Emoji Only) ---
@@ -72,7 +72,7 @@ async def get_dashboard(user_id, page=1):
 async def start_cmd(client, message):
     text = (
         "👋 **__Professional Uptime Monitor__**\n\n"
-        "**__I use Adaptive Intelligence ( Head & Get ) to Monitor your Websites.__\n"
+        "**__I use Adaptive Intelligence ( Head & Get ) to Monitor your Websites.__**\n"
         "**__Created By @MyselfNeon__**\n\n"
         "**__Commands:__**\n"
         "__/add {url} – Monitor a new URL__\n"
