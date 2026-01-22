@@ -40,11 +40,7 @@ class Database:
         )
 
     async def add_url(self, user_id, url):
-        # Limit check: Max 5 URLs per user
-        count = await self.col.count_documents({"user_id": user_id})
-        if count >= 5:
-            return False, "Limit Reached (5 URLs Max)"
-            
+        # Limit check removed here. It is handled in commands.py
         url_dict = self.new_url(user_id, url)
         await self.col.insert_one(url_dict)
         return True, "Added"
