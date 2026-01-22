@@ -41,7 +41,7 @@ async def get_dashboard(user_id, page=1):
         # Styled List Item
         text += (
             f"**__{idx}. `{data['url']}`__**\n"
-            f"   **╚** {s_icon} __{status} ⚡ {resp}ms 📈 {uptime_pct}%__\n\n"
+            f"   **╚** [{s_icon}]({data['url']}) __**{status}** ⚡ {resp}ms 📈 {uptime_pct}%__\n\n"
         )
     
     # --- Button Logic (Emoji Only) ---
