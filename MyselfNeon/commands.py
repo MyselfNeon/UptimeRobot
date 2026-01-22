@@ -40,8 +40,8 @@ async def get_dashboard(user_id, page=1):
 
         # Styled List Item
         text += (
-            f"**__{idx}. {data['url']}__**\n"
-            f"   **__╚__** {s_icon} `{status}` │ ⚡ `{resp}ms` │ 📈 `{uptime_pct}%`\n\n"
+            f"**__{idx}. `{data['url']}`__**\n"
+            f"   **╚** __{s_icon} {status} ⚡ {resp}ms 📈 {uptime_pct}%__\n\n"
         )
     
     # --- Button Logic (Emoji Only) ---
@@ -68,23 +68,23 @@ async def get_dashboard(user_id, page=1):
     return text, InlineKeyboardMarkup(buttons)
 
 # --- Commands ---
-
 @Client.on_message(filters.command("start") & filters.private)
 async def start_cmd(client, message):
     text = (
         "👋 **__Professional Uptime Monitor__**\n\n"
-        "__I use adaptive intelligence (HEAD/GET) to monitor your websites.__\n\n"
-        "🔸 **__Commands:__**\n"
-        "__/add__ `url` – __Monitor a new site__\n"
-        "__/del__ `url` – __Remove a site__\n"
-        "__/list__ – __View Dashboard__"
+        "**__I use Adaptive Intelligence ( Head & Get ) to Monitor your Websites.__\n"
+        "**__Created By @MyselfNeon__**\n\n"
+        "**__Commands:__**\n"
+        "__/add {url} – Monitor a new URL__\n"
+        "__/del {url} – Remove an URL__\n"
+        "__/list – View URLs Dashboard__"
     )
     await message.reply_text(text)
 
 @Client.on_message(filters.command("add") & filters.private)
 async def add_cmd(client, message):
     if len(message.command) < 2:
-        return await message.reply_text("⚠️ **__Usage:__** `/add https://google.com`")
+        return await message.reply_text("⚠️ **__Usage:** /add https://google.com__")
     
     user_id = message.chat.id
     url = message.command[1]
@@ -93,7 +93,6 @@ async def add_cmd(client, message):
     # We fetch only 1 item just to get the 'total_count' efficiently
     _, total_count = await db.get_urls_paginated(user_id, 1, 1)
     
-    # Normalize ADMIN to always be a list for safe checking
     admin_ids = ADMIN if isinstance(ADMIN, list) else [ADMIN]
     
     # If user is NOT admin AND has 5 or more URLs
@@ -103,7 +102,6 @@ async def add_cmd(client, message):
             "__Free users are limited to 5 URLs.__\n"
             "__Please remove a URL or contact Admin.__"
         )
-    # ---------------------------------------------------------------
 
     if not url.startswith(("http://", "https://")):
         return await message.reply_text("⛔️ **__URL must start with http/https__**")
@@ -113,17 +111,17 @@ async def add_cmd(client, message):
         
     success, msg = await db.add_url(user_id, url)
     if success:
-        await message.reply_text(f"✅ **__Added:__** `{url}`\n__State:__ `PENDING`")
+        await message.reply_text(f"✅ **__Added:__** `{url}`\n**__State: Pending__**")
     else:
         await message.reply_text(f"❌ **__Error:__** __{msg}__")
 
 @Client.on_message(filters.command("del") & filters.private)
 async def del_cmd(client, message):
     if len(message.command) < 2:
-        return await message.reply_text("⚠️ **__Usage:__** `/del https://google.com`")
+        return await message.reply_text("⚠️ **__Usage:** /del https://google.com__")
         
     await db.remove_url(message.chat.id, message.command[1])
-    await message.reply_text("🗑 **__Deleted.__**")
+    await message.reply_text("🗑 **__URL Deleted.__**")
 
 @Client.on_message(filters.command(["list", "check", "stats"]) & filters.private)
 async def list_cmd(client, message):
@@ -131,7 +129,6 @@ async def list_cmd(client, message):
     await message.reply_text(text, reply_markup=markup, disable_web_page_preview=True)
 
 # --- Callbacks ---
-
 @Client.on_callback_query(filters.regex(r"^list_page_(\d+)"))
 async def page_callback(client, query):
     # Standard navigation (Just switch page)
@@ -191,6 +188,6 @@ async def set_commands(client, message):
 
     try:
         await client.set_bot_commands(commands)
-        await message.reply_text(f"✅ **Success!** Updated {len(commands)} commands.")
+        await message.reply_text(f"✅ **__Success!** Updated {len(commands)} commands__.")
     except Exception as e:
         await message.reply_text(f"❌ **Error:** `{e}`")
