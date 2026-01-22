@@ -6,195 +6,174 @@
 # ---------------------------------------------------
 
 from pyrogram import Client, filters
-from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, ForceReply
+from pyrogram.types import InlineKeyboardMarkup, InlineKeyboardButton, BotCommand
 from .db import db
 from info import ADMIN
+import asyncio
 
-# --- Helper Function: Generate Dashboard Text ---
-async def get_dashboard_text(user_id, user_name):
-    """
-    Generates the text report and buttons for the dashboard.
-    Used by both /check command and the Refresh button.
-    """
-    urls_data = await db.col.find({"user_id": user_id}).to_list(length=None)
+# --- Helper: Generate Dashboard UI ---
+async def get_dashboard(user_id, page=1):
+    limit = 6
+    urls, total_count = await db.get_urls_paginated(user_id, page, limit)
     
-    if not urls_data:
-        return "📂 **__List is Empty!__**\n__Use__ `/add` __to monitor a site.__", None
+    # --- Empty State ---
+    if not urls and page == 1:
+        return "📂 **__List is Empty!__**\n__Use__ `/add https://site.com` __to start.__", None
     
-    text = f"📊 **__Your Monitoring Dashboard__**\n__User: {user_name}__\n\n"
+    text = f"📊 **__Dashboard (Page {page})__**\n__Total Monitors: {total_count}__\n\n"
     
-    for index, data in enumerate(urls_data):
-        url = data.get('url', 'Unknown')
-        status = data.get('status', 'Unknown')
-        latency = data.get('response_time', 0)
+    # --- Generate List Text ---
+    for i, data in enumerate(urls):
+        idx = (page - 1) * limit + i + 1
+        status = data.get('status', 'PENDING')
         
-        # Calculate Uptime Percentage
-        total = data.get('total_checks', 1)
-        up_count = data.get('uptime_count', 0)
-        percentage = round((up_count / total) * 100, 2) if total > 0 else 0
+        # Icons
+        s_icon = {
+            "ONLINE": "🟢", "DOWN": "🔴", "SLOW": "🟡", 
+            "PAUSED": "⛔️", "PENDING": "⏳", "RATE-LIMITED": "⚠️"
+        }.get(status, "❓")
         
-        # Formatting
-        is_online = status == 200
-        icon = "🟢" if is_online else "🔴"
-        status_text = "Online" if is_online else f"Offline ({status})"
-        
+        resp = data.get('response_time', 0)
+        uptime_pct = 0
+        if data.get('total_checks', 0) > 0:
+            uptime_pct = round((data['uptime_count'] / data['total_checks']) * 100, 1)
+
+        # Styled List Item
         text += (
-            f"**{index + 1}.** `{url}`\n"
-            f"   **╚ Status:** {status_text} {icon}\n"
-            f"   **╚ Ping:** `{latency}ms` ⚡\n"
-            f"   **╚ Uptime:** `{percentage}%` 📈\n\n"
+            f"**__{idx}. {data['url']}__**\n"
+            f"   **__╚__** {s_icon} `{status}` │ ⚡ `{resp}ms` │ 📈 `{uptime_pct}%`\n\n"
         )
     
-    buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🔄 Refresh Stats", callback_data="ping_all")]
-    ])
-    
-    return text, buttons
+    # --- Button Logic (Emoji Only) ---
+    buttons = []
+    nav_row = []
 
-# --- Start Command ---
+    # 1. Back Button (⬅️) - Only if not on Page 1
+    if page > 1:
+        nav_row.append(InlineKeyboardButton("⬅️", callback_data=f"list_page_{page-1}"))
+    
+    # 2. Force Refresh Button (🔄) - Always Present
+    nav_row.append(InlineKeyboardButton("🔄", callback_data=f"force_refresh_{page}"))
+    
+    # 3. Next Button (➡️) - Only if more pages exist
+    if (page * limit) < total_count:
+        nav_row.append(InlineKeyboardButton("➡️", callback_data=f"list_page_{page+1}"))
+            
+    buttons.append(nav_row)
+    buttons.append([InlineKeyboardButton("❌ Close", callback_data="close_dash")])
+    
+    return text, InlineKeyboardMarkup(buttons)
+
+# --- Commands ---
+
 @Client.on_message(filters.command("start") & filters.private)
-async def start_command(client, message):
-    user_name = message.chat.first_name
-    
+async def start_cmd(client, message):
     text = (
-        f">👋 **__Hello {user_name}__**\n\n"
-        "🎉 **__Welcome to your Premium Uptime Monitor Bot.__**\n"
-        "**__I am here to Protect your Web Urls from going to Sleep.__**\n\n"
-        "⁉️ **__Features I Provide :__**\n"
-        "– __I monitor your URLs 24/7 and Alert you Instantly if they go Down.__\n\n"
-        "🛠 **__Control Menu :__**\n"
-        "> **__Start Monitoring:__** `/add Url`\n"
-        "> **__Stop Monitoring:__** `/del Url`\n"
-        "> **__Live Dashboard:__** `/check`\n"
-        "> **__Set Interval:__** `/time`"
+        "👋 **__Professional Uptime Monitor__**\n\n"
+        "__I use adaptive intelligence (HEAD/GET) to monitor your websites.__\n\n"
+        "🔸 **__Commands:__**\n"
+        "__/add__ `url` – __Monitor a new site__\n"
+        "__/del__ `url` – __Remove a site__\n"
+        "__/list__ – __View Dashboard__"
     )
-    
-    buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("🆘 Sᴜᴘᴘᴏʀᴛ", url="https://t.me/MyselfNeon"),
-         InlineKeyboardButton("📢 Uᴘᴅᴀᴛᴇs", url="https://t.me/NeonFiles")]
-    ])
-    
-    await message.reply_text(text, reply_markup=buttons)
+    await message.reply_text(text)
 
-# --- Add Url Command ---
 @Client.on_message(filters.command("add") & filters.private)
-async def add_url_command(client, message):
-    user_id = message.chat.id
-
+async def add_cmd(client, message):
     if len(message.command) < 2:
-        return await message.reply_text("⚠️ **__Usage:__** `/add https://your-site.com`")
+        return await message.reply_text("⚠️ **__Usage:__** `/add https://google.com`")
     
     url = message.command[1]
-    if not url.startswith("http"):
-        return await message.reply_text("⛔ **__Invalid URL!__**\n__Must start with `http://` or `https://`__")
-    
-    if await db.is_url_exist(user_id, url):
-        return await message.reply_text("⚠️ **__URL Already Exists!__**")
-    
-    await db.add_url(user_id, url)
-    await message.reply_text(
-        f"✅ **__New Added!__**\n\n"
-        f"🔗 **__URL:__** `{url}`\n"
-        f"🚀 **__Status:__** **__Monitoring Started...__**"
-    )
+    if not url.startswith(("http://", "https://")):
+        return await message.reply_text("⛔️ **__URL must start with http/https__**")
+        
+    if await db.is_url_exist(message.chat.id, url):
+        return await message.reply_text("⚠️ **__URL already exists.__**")
+        
+    success, msg = await db.add_url(message.chat.id, url)
+    if success:
+        await message.reply_text(f"✅ **__Added:__** `{url}`\n__State:__ `PENDING`")
+    else:
+        await message.reply_text(f"❌ **__Error:__** __{msg}__")
 
-# --- Delete Url Command ---
 @Client.on_message(filters.command("del") & filters.private)
-async def delete_url_command(client, message):
-    user_id = message.chat.id
-
+async def del_cmd(client, message):
     if len(message.command) < 2:
-        return await message.reply_text("⚠️ **__Usage:__** `/del https://your-site.com`")
-    
-    url = message.command[1]
-    if not await db.is_url_exist(user_id, url):
-        return await message.reply_text("🤷‍♂️ **__Not Found!__**")
-    
-    await db.remove_url(user_id, url)
-    await message.reply_text(f"🗑 **__Deleted:__** `{url}`")
+        return await message.reply_text("⚠️ **__Usage:__** `/del https://google.com`")
+        
+    await db.remove_url(message.chat.id, message.command[1])
+    await message.reply_text("🗑 **__Deleted.__**")
 
-# --- Stats / Dashboard Command ---
-@Client.on_message(filters.command(["check", "stats", "dashboard", "list"]) & filters.private)
-async def stats_command(client, message):
-    user_id = message.chat.id
-    user_name = message.chat.first_name
-    
-    wait_msg = await message.reply_text("🔄 **__Fetching Data...__**")
-    
-    text, buttons = await get_dashboard_text(user_id, user_name)
-    
-    await wait_msg.edit_text(text, reply_markup=buttons, disable_web_page_preview=True)
+@Client.on_message(filters.command(["list", "check", "stats"]) & filters.private)
+async def list_cmd(client, message):
+    text, markup = await get_dashboard(message.chat.id, 1)
+    await message.reply_text(text, reply_markup=markup, disable_web_page_preview=True)
 
-# --- Refresh Callback ---
-@Client.on_callback_query(filters.regex("ping_all"))
-async def ping_all_callback(client, query):
-    # Show small popup
-    await query.answer("🔄 Refreshing data...")
+# --- Callbacks ---
+
+@Client.on_callback_query(filters.regex(r"^list_page_(\d+)"))
+async def page_callback(client, query):
+    # Standard navigation (Just switch page)
+    page = int(query.matches[0].group(1))
+    text, markup = await get_dashboard(query.message.chat.id, page)
     
-    user_id = query.message.chat.id
-    user_name = query.message.chat.first_name
-    
-    # Generate new text
-    text, buttons = await get_dashboard_text(user_id, user_name)
-    
-    # Edit the EXISTING message
     try:
-        await query.message.edit_text(text, reply_markup=buttons, disable_web_page_preview=True)
-    except Exception:
-        # Ignore "Message Not Modified" error if stats haven't changed
+        await query.edit_message_text(text, reply_markup=markup, disable_web_page_preview=True)
+    except:
+        await query.answer("Loaded!")
+
+@Client.on_callback_query(filters.regex(r"^force_refresh_(\d+)"))
+async def force_refresh_callback(client, query):
+    page = int(query.matches[0].group(1))
+    user_id = query.from_user.id
+    
+    # 1. Show feedback immediately
+    await query.answer("🔄 Force Checking all URLs...", show_alert=False)
+    
+    # 2. Force Check Logic
+    # We set 'next_check' to 0 so the monitor loop picks them up immediately
+    await db.col.update_many(
+        {"user_id": user_id},
+        {"$set": {"next_check": 0}}
+    )
+    
+    # 3. Wait a moment for the background worker (monitor.py runs every 5s)
+    await asyncio.sleep(2)
+    
+    # 4. Reload the dashboard with new stats
+    text, markup = await get_dashboard(user_id, page)
+    try:
+        await query.edit_message_text(text, reply_markup=markup, disable_web_page_preview=True)
+    except:
         pass
 
-# --- Time Command (Admin Only) ---
-@Client.on_message(filters.command("time") & filters.private)
-async def time_command(client, message):
-    if message.chat.id != ADMIN:
-        return await message.reply_text("⛔ **__Access Denied!__**\n__This command is for Admins only.__")
+@Client.on_callback_query(filters.regex("close_dash"))
+async def close_callback(client, query):
+    await query.message.delete()
 
-    current_time = await db.get_interval()
+# --- Edit Commands (New Plugin Added) ---
+COMMANDS_TEXT = """
+start - 🚀 𝘊𝘩𝘦𝘤𝘬 𝘉𝘰𝘵 𝘈𝘭𝘪𝘷𝘦
+add - ✅ 𝘈𝘥𝘥 𝘢 𝘕𝘦𝘸 𝘜𝘙𝘓
+del - 🚫 𝘋𝘦𝘭𝘦𝘵𝘦 𝘢𝘯 𝘜𝘙𝘓
+stats - ⁉️ 𝘊𝘩𝘦𝘤𝘬 𝘚𝘵𝘢𝘵𝘶𝘴 𝘰𝘧 𝘜𝘙𝘓𝘴
+"""
+
+@Client.on_message(filters.command("setcmd") & filters.user(ADMIN))
+async def set_commands(client, message):
+    commands = []
     
-    text = (
-        f"⏱ **__Monitor Interval Settings__**\n\n"
-        f"**__Current: {current_time} Seconds__**"
-    )
-    
-    buttons = InlineKeyboardMarkup([
-        [InlineKeyboardButton("📝 Change", callback_data="time_change"),
-         InlineKeyboardButton("❌ Close", callback_data="time_close")]
-    ])
-    
-    await message.reply_text(text, reply_markup=buttons)
+    # Parse the text block line by line
+    for line in COMMANDS_TEXT.strip().split("\n"):
+        if "-" in line:
+            cmd, desc = line.split("-", 1)
+            commands.append(BotCommand(cmd.strip(), desc.strip()))
 
-@Client.on_callback_query(filters.regex("^time_"))
-async def time_callbacks(client, query):
-    if query.from_user.id != ADMIN:
-        return await query.answer("❌ Admin only!", show_alert=True)
+    if not commands:
+        return await message.reply_text("❌ No commands found in the configuration list.")
 
-    data = query.data
-    
-    if data == "time_close":
-        await query.message.delete()
-        
-    elif data == "time_change":
-        await query.answer()
-        await query.message.reply_text(
-            "⏳ **__Send new interval (seconds):__**",
-            reply_markup=ForceReply(selective=True)
-        )
-
-# --- Handle Time Input ---
-@Client.on_message(filters.reply & filters.private)
-async def set_time_input(client, message):
-    if message.chat.id != ADMIN:
-        return
-
-    if message.reply_to_message and "Send new interval" in message.reply_to_message.text:
-        try:
-            new_time = int(message.text)
-            if new_time < 10: 
-                return await message.reply_text("⚠️ **__Minimum 10s!__**")
-            
-            await db.set_interval(new_time)
-            await message.reply_text(f"✅ **__Interval set to {new_time}s.__**")
-        except ValueError:
-            await message.reply_text("⚠️ **__Numbers only.__**")
-            
+    try:
+        await client.set_bot_commands(commands)
+        await message.reply_text(f"✅ **Success!** Updated {len(commands)} commands.")
+    except Exception as e:
+        await message.reply_text(f"❌ **Error:** `{e}`")

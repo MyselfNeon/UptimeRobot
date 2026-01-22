@@ -1,5 +1,5 @@
 # ---------------------------------------------------
-# File Name: Monitor.py
+# File Name: monitor.py
 # Author: MyselfNeon
 # GitHub: https://github.com/MyselfNeon/
 # Telegram: https://t.me/MyelfNeon
@@ -8,114 +8,129 @@
 import asyncio
 import aiohttp
 import time
-import ssl
-import certifi
-import socket
 from pyrogram import Client
-from datetime import datetime
-from urllib.parse import urlparse
 from .db import db
 
-# Cache to prevent spamming the same alert
-# Format: {"user_id|url": "online"}
-url_states = {}
+# Cache states in memory
+state_cache = {}
 
-async def get_ssl_expiry(url):
-    """Check SSL Certificate Expiry Date"""
+async def smart_check(session, url):
+    """
+    Strategy: HEAD -> If Error -> GET
+    Returns: (is_up, status_code/error, latency_ms)
+    """
+    timeout = aiohttp.ClientTimeout(total=10) # Explicit 10s timeout
+    start = time.perf_counter()
+    
     try:
-        parsed = urlparse(url)
-        hostname = parsed.netloc
-        context = ssl.create_default_context(cafile=certifi.where())
-        conn = context.wrap_socket(socket.socket(socket.AF_INET), server_hostname=hostname)
-        conn.settimeout(3.0)
-        conn.connect((hostname, 443))
-        ssl_info = conn.getpeercert()
-        # Parse date
-        expire_date = datetime.strptime(ssl_info['notAfter'], r'%b %d %H:%M:%S %Y %Z')
-        days_left = (expire_date - datetime.now()).days
-        conn.close()
-        return days_left
-    except:
-        return None
+        # 1. Try HEAD first (Faster, lighter)
+        async with session.head(url, timeout=timeout, allow_redirects=True) as response:
+            latency = int((time.perf_counter() - start) * 1000)
+            status = response.status
+            
+            if status == 429:
+                return True, 429, latency # Treat 429 as "Up but throttling"
+            
+            # If Method Not Allowed (405) or other 4xx/5xx, verify with GET
+            # Some servers block HEAD but allow GET.
+            if status >= 400:
+                raise ValueError("Force GET") # Trigger fallback
+                
+            return True, status, latency
 
-async def advanced_check(session, url):
-    """
-    Returns: (is_online, status_code, latency_ms)
-    """
-    start_time = time.perf_counter()
-    try:
-        async with session.get(url, timeout=15) as response:
-            latency = (time.perf_counter() - start_time) * 1000 # to ms
-            return True, response.status, int(latency)
+    except (ValueError, aiohttp.ClientError, asyncio.TimeoutError):
+        # 2. Fallback to GET if HEAD fails or returns suspicious error
+        try:
+            # Reset timer for the GET attempt (optional, or accumulative)
+            # We'll measure just the GET latency here
+            start_get = time.perf_counter()
+            async with session.get(url, timeout=timeout) as response:
+                latency = int((time.perf_counter() - start_get) * 1000)
+                status = response.status
+                
+                if status == 429:
+                    return True, 429, latency
+                
+                if 200 <= status < 400:
+                    return True, status, latency
+                else:
+                    return False, status, latency
+                    
+        except asyncio.TimeoutError:
+            return False, "Timeout", 0
+        except aiohttp.ClientConnectorError:
+            return False, "DNS/Connection Error", 0
+        except Exception as e:
+            return False, "Error", 0
     except Exception as e:
-        return False, "Timeout/Error", 0
+         return False, "Unknown Error", 0
 
-async def process_url(app, session, entry):
-    """Process a single URL independently"""
-    user_id = entry.get("user_id")
-    url = entry.get("url")
+async def process_entry(app, session, entry):
+    user_id = entry['user_id']
+    url = entry['url']
+    entry_id = entry['_id']
+    
+    is_up, code, latency = await smart_check(session, url)
+    
+    # Retry logic only if actually DOWN (not for 429 or Slow)
+    if not is_up:
+        await asyncio.sleep(1)
+        is_up, code, latency = await smart_check(session, url)
+
+    result_data = {
+        'is_up': is_up,
+        'latency': latency,
+        'code': code,
+        'consecutive_failures': entry.get('consecutive_failures', 0),
+        'check_interval': entry.get('check_interval', 60)
+    }
+
+    new_status = await db.update_adaptive_result(entry_id, result_data)
+
+    # State Change Alert
     unique_key = f"{user_id}|{url}"
+    prev_status = state_cache.get(unique_key, "PENDING")
     
-    # 1. Check Status
-    is_online, code, latency = await advanced_check(session, url)
+    if new_status != prev_status:
+        state_cache[unique_key] = new_status
+        if entry.get('alert_mode') != "SILENT":
+            await send_alert(app, user_id, url, new_status, code, latency)
+
+async def send_alert(app, user_id, url, status, code, latency):
+    icon = {
+        "ONLINE": "🟢", "SLOW": "🟡", "DOWN": "🔴", 
+        "PAUSED": "⛔️", "RATE-LIMITED": "⚠️"
+    }.get(status, "❓")
     
-    # 2. Retry Logic (Smart Filtering)
-    if not is_online:
-        await asyncio.sleep(2)
-        is_online, code, latency = await advanced_check(session, url)
-
-    # 3. Update Database with Stats
-    await db.update_url_status(user_id, url, code, latency, is_online)
-
-    # 4. Handle Alerts
-    prev_state = url_states.get(unique_key, "online") # Default to online to avoid startup spam
+    msg_title = "Service Rate Limited" if status == "RATE-LIMITED" else f"Monitor Alert: {status}"
     
-    if is_online:
-        if prev_state == 'offline':
-            # RECOVERY ALERT
-            try:
-                await app.send_message(
-                    user_id,
-                    f"🟢 **Service Recovered!**\n\n"
-                    f"🔗 **URL:** `{url}`\n"
-                    f"⚡ **Latency:** `{latency}ms`\n"
-                    f"✅ **Status:** Back Online (200 OK)"
-                )
-            except Exception as e:
-                print(f"Failed to alert {user_id}: {e}")
+    text = (
+        f"{icon} **{msg_title}**\n\n"
+        f"🔗 **URL:** `{url}`\n"
+        f"📝 **Info:** `{code}`\n"
+        f"⚡ **Latency:** `{latency}ms`\n"
+    )
+    
+    if status == "PAUSED":
+        text += "\n💀 **Monitoring paused due to 20 consecutive failures.**"
+    elif status == "RATE-LIMITED":
+        text += "\n⏳ **Backing off checks to prevent block.**"
 
-        url_states[unique_key] = 'online'
-    else:
-        if prev_state != 'offline':
-            # DOWN ALERT
-            try:
-                await app.send_message(
-                    user_id,
-                    f"🔴 **Service DOWN!**\n\n"
-                    f"🔗 **URL:** `{url}`\n"
-                    f"⚠️ **Error:** `{code}`\n"
-                    f"📉 **Latency:** `0ms`\n"
-                    f"🛠 Please check your server immediately."
-                )
-            except Exception as e:
-                print(f"Failed to alert {user_id}: {e}")
-
-            url_states[unique_key] = 'offline'
+    try:
+        await app.send_message(user_id, text, disable_web_page_preview=True)
+    except Exception:
+        pass 
 
 async def monitor_task(app: Client):
-    print("🚀 Started High-Performance Monitoring Engine...")
+    print("🧠 Starting Intelligent Monitor (HEAD + GET fallback)...")
+    
+    # Initialize DB Indexes on startup
+    await db.ensure_indexes()
     
     async with aiohttp.ClientSession() as session:
         while True:
-            all_entries = await db.get_all_monitored_datas()
-            interval = await db.get_interval()
-
-            # CONCURRENT EXECUTION
-            tasks = [process_url(app, session, entry) for entry in all_entries]
-            
-            # Run all checks simultaneously
-            if tasks:
+            due_urls = await db.get_due_urls()
+            if due_urls:
+                tasks = [process_entry(app, session, entry) for entry in due_urls]
                 await asyncio.gather(*tasks)
-            
-            await asyncio.sleep(interval)
-            
+            await asyncio.sleep(5)

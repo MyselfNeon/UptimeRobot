@@ -1,5 +1,5 @@
 # ---------------------------------------------------
-# File Name: Database.py
+# File Name: database.py
 # Author: MyselfNeon
 # GitHub: https://github.com/MyselfNeon/
 # Telegram: https://t.me/MyelfNeon
@@ -16,70 +16,120 @@ class Database:
         self.col = self.db.urls
         self.config = self.db.config
 
+    async def ensure_indexes(self):
+        """Create indices for scaling."""
+        # Index for fetching due URLs quickly
+        await self.col.create_index([("next_check", 1), ("status", 1)])
+        # Index for user lookups and pagination
+        await self.col.create_index([("user_id", 1)])
+
     def new_url(self, user_id, url):
         return dict(
             user_id=user_id,
             url=url,
-            status="Unknown",
+            status="PENDING",     # ONLINE, DOWN, SLOW, PAUSED, RATE-LIMITED
+            last_code="200",
             response_time=0,
-            last_checked=None,
             uptime_count=0,
             total_checks=0,
-            ssl_expiry=None
+            consecutive_failures=0,
+            next_check=time.time(),
+            check_interval=60,
+            alert_mode="ON",
+            added_at=time.time()
         )
 
     async def add_url(self, user_id, url):
-        # Adds URL specifically for this user
+        # Limit check: Max 5 URLs per user
+        count = await self.col.count_documents({"user_id": user_id})
+        if count >= 5:
+            return False, "Limit Reached (5 URLs Max)"
+            
         url_dict = self.new_url(user_id, url)
         await self.col.insert_one(url_dict)
+        return True, "Added"
 
     async def remove_url(self, user_id, url):
-        # Removes URL only if it belongs to this user
         await self.col.delete_one({"user_id": user_id, "url": url})
-
-    async def get_urls(self, user_id):
-        # Get only URLs belonging to this specific user
-        urls = await self.col.find({"user_id": user_id}).to_list(length=None)
-        return [x["url"] for x in urls]
-
-    async def get_all_monitored_datas(self):
-        # For the background monitor: Get ALL data
-        return await self.col.find().to_list(length=None)
 
     async def is_url_exist(self, user_id, url):
         found = await self.col.find_one({"user_id": user_id, "url": url})
         return bool(found)
-    
-    # --- Advanced Stats Updates ---
-    async def update_url_status(self, user_id, url, status, response_time, is_up):
-        """Updates stats for analytics"""
-        update_data = {
+
+    async def get_urls_paginated(self, user_id, page=1, limit=6):
+        skip = (page - 1) * limit
+        cursor = self.col.find({"user_id": user_id}).skip(skip).limit(limit)
+        urls = await cursor.to_list(length=limit)
+        total_count = await self.col.count_documents({"user_id": user_id})
+        return urls, total_count
+
+    async def get_due_urls(self):
+        now = time.time()
+        return await self.col.find({
+            "next_check": {"$lte": now}, 
+            "status": {"$ne": "PAUSED"}
+        }).to_list(length=None)
+
+    async def update_adaptive_result(self, _id, result_data):
+        now = time.time()
+        
+        is_up = result_data['is_up']
+        latency = result_data['latency']
+        code = result_data['code']
+        current_fails = result_data['consecutive_failures']
+        current_interval = result_data['check_interval']
+
+        update_query = {
             "$set": {
-                "status": status,
-                "response_time": response_time,
-                "last_checked": time.time()
+                "last_code": str(code),
+                "response_time": latency,
+                "last_checked": now,
             },
             "$inc": {"total_checks": 1}
         }
-        
-        if is_up:
-            update_data["$inc"]["uptime_count"] = 1
+
+        # --- Adaptive Logic ---
+        if code == 429:
+            # RATE LIMITED HANDLING
+            new_status = "RATE-LIMITED"
+            # Do NOT reset uptime, do NOT increment failures
+            # Backoff: Double interval (Max 10 mins) to let it cool down
+            new_interval = min(current_interval * 2, 600)
+            update_query["$set"]["check_interval"] = int(new_interval)
+            update_query["$set"]["status"] = new_status
             
-        await self.col.update_one(
-            {"user_id": user_id, "url": url},
-            update_data
-        )
+        elif is_up:
+            # ONLINE
+            new_status = "SLOW" if latency > 1500 else "ONLINE"
+            update_query["$set"]["consecutive_failures"] = 0
+            update_query["$inc"]["uptime_count"] = 1
+            
+            # Gradually increase interval if stable (Max 5 mins)
+            new_interval = min(current_interval * 1.5, 300) 
+            if current_interval < 60: new_interval = 60
+            
+            update_query["$set"]["check_interval"] = int(new_interval)
+            update_query["$set"]["status"] = new_status
+            
+        else:
+            # DOWN or DEGRADED
+            new_fails = current_fails + 1
+            update_query["$set"]["consecutive_failures"] = new_fails
+            
+            if new_fails >= 20:
+                update_query["$set"]["status"] = "PAUSED"
+                update_query["$set"]["check_interval"] = 0
+            else:
+                update_query["$set"]["status"] = "DOWN"
+                # Speed up checks to catch recovery (Min 30s)
+                new_interval = max(current_interval / 2, 30)
+                update_query["$set"]["check_interval"] = int(new_interval)
 
-    # Configuration (Global Interval)
-    async def set_interval(self, seconds):
-        await self.config.update_one(
-            {"_id": "interval"},
-            {"$set": {"value": int(seconds)}},
-            upsert=True
-        )
+        # Schedule Next Check (Unless Paused)
+        if update_query["$set"]["status"] != "PAUSED":
+            update_query["$set"]["next_check"] = now + update_query["$set"]["check_interval"]
 
-    async def get_interval(self):
-        config = await self.config.find_one({"_id": "interval"})
-        return config["value"] if config else 60
+        await self.col.update_one({"_id": _id}, update_query)
+        return update_query["$set"]["status"]
 
 db = Database(DB_URI, DB_NAME)
