@@ -59,8 +59,11 @@ async def get_dashboard(user_id, page=1):
     if (page * limit) < total_count:
         nav_row.append(InlineKeyboardButton("➡️", callback_data=f"list_page_{page+1}"))
             
-    buttons.append(nav_row)
-    buttons.append([InlineKeyboardButton("❌ Close", callback_data="close_dash")])
+    # Add the navigation row if it has buttons
+    if nav_row:
+        buttons.append(nav_row)
+    
+    # "Close" button has been removed as requested
     
     return text, InlineKeyboardMarkup(buttons)
 
@@ -83,14 +86,32 @@ async def add_cmd(client, message):
     if len(message.command) < 2:
         return await message.reply_text("⚠️ **__Usage:__** `/add https://google.com`")
     
+    user_id = message.chat.id
     url = message.command[1]
+
+    # --- 1. Check URL Limit (Max 5 for Users, Infinite for Admin) ---
+    # We fetch only 1 item just to get the 'total_count' efficiently
+    _, total_count = await db.get_urls_paginated(user_id, 1, 1)
+    
+    # Normalize ADMIN to always be a list for safe checking
+    admin_ids = ADMIN if isinstance(ADMIN, list) else [ADMIN]
+    
+    # If user is NOT admin AND has 5 or more URLs
+    if user_id not in admin_ids and total_count >= 5:
+        return await message.reply_text(
+            "⛔️ **__Limit Reached!__**\n\n"
+            "__Free users are limited to 5 URLs.__\n"
+            "__Please remove a URL or contact Admin.__"
+        )
+    # ---------------------------------------------------------------
+
     if not url.startswith(("http://", "https://")):
         return await message.reply_text("⛔️ **__URL must start with http/https__**")
         
-    if await db.is_url_exist(message.chat.id, url):
+    if await db.is_url_exist(user_id, url):
         return await message.reply_text("⚠️ **__URL already exists.__**")
         
-    success, msg = await db.add_url(message.chat.id, url)
+    success, msg = await db.add_url(user_id, url)
     if success:
         await message.reply_text(f"✅ **__Added:__** `{url}`\n__State:__ `PENDING`")
     else:
@@ -147,11 +168,7 @@ async def force_refresh_callback(client, query):
     except:
         pass
 
-@Client.on_callback_query(filters.regex("close_dash"))
-async def close_callback(client, query):
-    await query.message.delete()
-
-# --- Edit Commands (New Plugin Added) ---
+# --- Edit Commands ---
 COMMANDS_TEXT = """
 start - 🚀 𝘊𝘩𝘦𝘤𝘬 𝘉𝘰𝘵 𝘈𝘭𝘪𝘷𝘦
 add - ✅ 𝘈𝘥𝘥 𝘢 𝘕𝘦𝘸 𝘜𝘙𝘓
