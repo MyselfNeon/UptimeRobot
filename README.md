@@ -4,8 +4,8 @@
 
 ### 🚀 *Features*
 
-* ***🚀 Concurrent Monitoring: Uses `asyncio` to check URLs simultaneously with high efficiency.***
-* ***🧠 Adaptive Intelligence: Smart intervals—checks unstable sites faster (30s) and stable sites slower (5m).***
+* ***🚀 Concurrent Monitoring: Uses `asyncio` to check URLs with high efficiency.***
+* ***🧠 Adaptive Intelligence: Smart intervals checks unstable sites faster (30s) and stable sites slower (5m).***
 * ***⚡ Latency Tracking: Tracks response time (ping) in milliseconds for every check.***
 * ***📈 Uptime Analytics: Calculates and displays the Uptime Percentage (e.g., 99.98%) for each site.***
 * ***🔔 Smart Alerts: Instant notifications for Downtime, Recovery, Rate-Limits, and Slow Response times.***
@@ -109,7 +109,9 @@ docker restart fsb
 
 </details>
 
-#### *Bot Commands ➠* <details><summary><b><i>Bot Commands</i></b></summary>
+#### *Bot Commands ➠*
+
+<details><summary><b><i>Bot Commands</i></b></summary>
   
 ```
 start - Welcome & Help Menu
@@ -130,8 +132,7 @@ Join My <a href='https://t.me/neonfiles'>Update Channel</a> For More Update Rega
 </details>
 
 #### *Thanks To ➠* ❤️
- - <b>Thanks To [Neon An](https://t.me/MyselfNeon) To Modify And Add Amazing Features
- - Thanks To Everyone who have Contributed In This Repo ❤️</b>
+ - <b>Thanks To [Neon An](https://t.me/MyselfNeon) To Create And Add Amazing Features</b>
 
 ---
 
