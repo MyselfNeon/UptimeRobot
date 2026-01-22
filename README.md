@@ -1,16 +1,16 @@
 ### *Premium Uptime Monitor Bot*
 
-***A powerful, High-performance asynchronous Telegram Bot written in Python (Pyrogram) to monitor the uptime of your websites. It monitors latency, SSL health, and uptime percentage in real-time.***
+***A powerful, High-performance asynchronous Telegram Bot written in Python (Pyrogram) to monitor the uptime of your websites. It monitors latency, adaptive stability, and uptime percentage in real-time.***
 
 ### 🚀 *Features*
 
-* ***🚀 Concurrent Monitoring: Uses `asyncio` to check hundreds of URLs simultaneously without lag.***
+* ***🚀 Concurrent Monitoring: Uses `asyncio` to check URLs simultaneously with high efficiency.***
+* ***🧠 Adaptive Intelligence: Smart intervals—checks unstable sites faster (30s) and stable sites slower (5m).***
 * ***⚡ Latency Tracking: Tracks response time (ping) in milliseconds for every check.***
-* ***🔒 SSL Health Checks: Monitors SSL certificate validity and alerts if expired.***
 * ***📈 Uptime Analytics: Calculates and displays the Uptime Percentage (e.g., 99.98%) for each site.***
-* ***🔔 Smart Alerts: Instant notifications for Downtime, Recovery, and Slow Response times.***
-* ***📊 Live Dashboard: A beautiful text-based dashboard with auto-refresh capabilities.***
-* ***🛠 Multi-User & Admin Controls: Users manage their own lists; Admins control global intervals.***
+* ***🔔 Smart Alerts: Instant notifications for Downtime, Recovery, Rate-Limits, and Slow Response times.***
+* ***📊 Live Dashboard: A paginated text-based dashboard with auto-refresh and navigation.***
+* ***🛠 Multi-User Controls: Users manage their own lists with built-in anti-abuse limits.***
 * ***☁️ Cloud Ready: Built-in `aiohttp` web server to keep the bot alive on Render/Railway/Heroku.***
 
 ---
@@ -57,7 +57,6 @@ docker run -d --restart unless-stopped --name uptime-bot \
 -e DB_URI=your_mongodb_uri \
 -p 8080:8080 \
 uptime-bot
-
 ```
 
 * ***If you Need to Change the Variables in .env File after your Bot was Already Started, all you need to do is Restart the container for the Bot Settings to get Updated:***
@@ -73,11 +72,11 @@ docker restart fsb
 
   ```sh
   git clone [https://github.com/myselfneon/Uptimer-Bot-neon](https://github.com/myselfneon/Uptimer-Bot-neon)
-cd Uptimer-Bot-neon
-python3 -m venv ./venv
-source ./venv/bin/activate  # Windows: .\venv\Scripts\activate
-pip install -r requirements.txt
-python3 main.py
+  cd Uptimer-Bot-neon
+  python3 -m venv ./venv
+  source ./venv/bin/activate  # Windows: .\venv\Scripts\activate
+  pip install -r requirements.txt
+  python3 main.py
   ```
 
   * ***To stop the Bot Press <kbd>CTRL</kbd> + <kbd>C</kbd>.***
@@ -110,16 +109,13 @@ python3 main.py
 
 </details>
 
-#### *Bot Commands ➠* 
-
-<details><summary><b><i>Bot Commands</i></b></summary>
+#### *Bot Commands ➠* <details><summary><b><i>Bot Commands</i></b></summary>
   
 ```
 start - Welcome & Help Menu
 add - Start monitoring a URL (Usage: /add [https://google.com](https://google.com))
 del - Stop monitoring a URL (Usage: /del [https://google.com](https://google.com))
 check - View Live Dashboard with Latency & Uptime %
-time - [Admin Only] Change Global Monitoring Interval
 ```
 <b><i>⪼ Copy all Commands and paste it in <a href='https://t.me/botfather'>BotFather</a> to apply Commands.
 
@@ -147,7 +143,7 @@ Uptimer-Bot-neon/
 │   ├── __init__.py
 │   ├── commands.py    # Handlers for /add, /del, /check
 │   ├── db.py          # Database: Stores URLs, Uptime Counts, Latency
-│   ├── monitor.py     # Core Engine: Asyncio, SSL Check, Latency Tracking
+│   ├── monitor.py     # Core Engine: Smart Adaptive Check (HEAD/GET)
 │   └── ...
 ├── app.py             # Web Server (Keep-Alive)
 ├── info.py            # Configuration / Env Vars
