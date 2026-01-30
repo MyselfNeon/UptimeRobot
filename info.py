@@ -12,7 +12,7 @@ BOT_TOKEN = os.environ.get("BOT_TOKEN", "")
 
 # Admin ID (For startup logs and restricted commands)
 # Reads from ENV; defaults to 0 if not set.
-ADMIN = int(os.environ.get("ADMIN", "0"))
+ADMIN = int(os.environ.get("ADMIN", "841851780"))
 
 # Server Port
 PORT = int(os.environ.get("PORT", "8080"))
