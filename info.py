@@ -20,3 +20,6 @@ PORT = int(os.environ.get("PORT", "8080"))
 # Database Configuration
 DB_URI = os.environ.get("DB_URI", "")
 DB_NAME = os.environ.get("DB_NAME", "UptimeBot")
+
+# Keep Alive Configuration
+KEEP_ALIVE_URL = os.environ.get("KEEP_ALIVE_URL", "").strip()
