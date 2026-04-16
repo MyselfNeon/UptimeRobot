@@ -1,10 +1,4 @@
-# ---------------------------------------------------
-# File Name: Main.py
-# Author: MyselfNeon
-# GitHub: https://github.com/MyselfNeon/
-# Telegram: https://t.me/MyelfNeon
-# ---------------------------------------------------
-
+# --- main.py ---
 import sys
 import os
 import asyncio
